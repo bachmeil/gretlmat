@@ -16,7 +16,7 @@ This library makes it as easy as possible to add matrix and vector support to a 
 
 GPLv2
 
-# Design Principles
+# Design Constraints
 
 - Optimized for *ease of use* rather than *speed of execution*.
 - Full documentation, with a usage example for every feature.
