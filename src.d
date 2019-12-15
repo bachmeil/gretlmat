@@ -67,4 +67,29 @@ struct DoubleMatrix {
   double * ptr() {
     return data.ptr;
   }
+
+  this(int r, int c=1) {
+    data = new double[r*c];
+    rows = r;
+    cols = c;
+  }
+  
+  // Use a template to allow conversion of arguments to int
+  // Check for overflow just to be safe
+  this(T1, T2)(T1 r, T2 c=1) {
+		data = new double[r*c];
+		rows = r.to!int;
+		cols = c.to!int;
+	}
+
+  this(double[][] m) {
+		data = new double[m.length*m[0].length];
+		rows = to!int(m.length);
+		cols = to!int(m[0].length);
+		foreach(row, vals; m) {
+			foreach(col; 0..cols) {
+				data[col*rows+row.to!int] = vals[col];
+			}
+		}
+	}
 }
