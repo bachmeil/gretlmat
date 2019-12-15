@@ -28,6 +28,8 @@ If there is functionality provided by libgretl that is not available in gretlmat
 
 ## Constructor
 
+### Method 1
+
 Examples:
 
 ```
@@ -44,4 +46,50 @@ The dimensions you pass to the constructor can be of any type that converts to i
 ```
 double[] a = [1.2, 3.4, 5.6];
 auto m = DoubleMatrix(a.length);
+```
+
+### Method 2
+
+You can pass an array of `double[]`, where each element (each `double[]`) is a row. The `[]` notation means you have an array of whatever came before. Thus, `double[][]` is an array of `double[]`. If you want, you can do this to be clearer:
+
+```
+alias row = double[];
+row[] m;
+```
+
+which is the same as
+
+```
+double[][] m;
+```
+
+Usage example:
+
+```
+// Create the rows
+double[][] rs;
+rs ~= [1.1, 2.2, 3.3];
+rs ~= [4.4, 5.5, 6.6];
+auto m = DoubleMatrix(rs); // m is (2x3)
+```
+
+Note that this copies the data from `rs` into `m`.
+
+If you set the second argument (`rowElements`) to `false`, it treats each element as a column instead of a row:
+
+```
+// Create the columns
+double[][] rs;
+rs ~= [1.1, 2.2, 3.3];
+rs ~= [4.4, 5.5, 6.6];
+auto m = DoubleMatrix(rs); // m is (3x2)
+```
+
+### Method 3
+
+You can convert an array into a matrix with one column (a vector).
+
+```
+double[] v = [1.1, 2.2, 3.3];
+auto m = DoubleMatrix(v); // m is (3x1)
 ```

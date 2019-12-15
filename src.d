@@ -82,14 +82,47 @@ struct DoubleMatrix {
 		cols = c.to!int;
 	}
 
-  this(double[][] m) {
+  this(double[][] m, bool rowElements=true) {
 		data = new double[m.length*m[0].length];
-		rows = to!int(m.length);
-		cols = to!int(m[0].length);
-		foreach(row, vals; m) {
+    
+    // Treat each element as a row
+    if (rowElements) {
+      rows = to!int(m.length);
+      cols = to!int(m[0].length);
+      foreach(row, vals; m) {
+        foreach(col; 0..cols) {
+          data[col*rows+row.to!int] = vals[col];
+        }
+      }
+    // Treat each element as a column
+    } else {
+      rows= to!int(m[0].length);
+      cols = to!int(m.length);
+      foreach(col, vals; m) {
+        foreach(row; 0..rows) {
+          data[col*rows + row.to!int] = vals[row];
+        }
+      }
+    }
+	}
+  
+	this(GretlMatrix * m) {
+		data = new double[m.cols*m.rows];
+		rows = m.rows;
+		cols = m.cols;
+		foreach(row; 0..rows) {
 			foreach(col; 0..cols) {
-				data[col*rows+row.to!int] = vals[col];
+				data[col*rows+row] = m.ptr[col*rows+row];
 			}
 		}
 	}
+  
+  this(double[] v) {
+    data = v;
+    rows = to!int(v.length);
+    cols = 1;
+  }
+ 
+  // dim
+  // print
 }
