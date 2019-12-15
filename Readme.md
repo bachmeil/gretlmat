@@ -31,4 +31,4 @@ This library makes it as easy as possible to add matrix and vector support to a 
 - Avoid the garbage collector.
 - Extensive template usage/metaprogramming.
 - Expand to cover all use cases.
-- Non-GPL license. If for some reason the GPL bothers you, this is not your library. Gretl is GPL and my code is not independent of the Gretl code.
+- Non-GPL license. If for some reason the GPL bothers you, this is not your library. Gretl is GPL and my code is not independent of the Gretl code. This is only relevant if you plan to distribute code that is a derived work of gretlmat.
