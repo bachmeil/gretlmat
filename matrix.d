@@ -376,7 +376,7 @@ struct DoubleMatrix {
   }
   
   version(r) {
-		RMatrix opCast(T: RMatrix)() {
+		RMatrix opCast(T: RprMatrix)() {
 			auto result = RMatrix(rows, cols);
 			result.mat = this.mat;
 			return result;

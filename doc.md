@@ -150,3 +150,4 @@ DoubleMatrix m2 = m.reshape(20, 10);
 DoubleMatrix m2 = m.setColumns(10);
 DoubleMatrix m2 = m.setRows(20);
 ```
+

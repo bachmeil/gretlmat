@@ -1,4 +1,5 @@
 module gretlmat.base;
+import std.stdio;
 
 extern(C) {
   int gretl_matrix_multiply(const GretlMatrix * a, const GretlMatrix * b, GretlMatrix * c);
@@ -127,9 +128,10 @@ struct DoubleMatrix {
     cols = 1;
   }
  
-  // dim
-  // print
-  
+  int[2] dim() {
+		return [this.rows, this.cols];
+	}
+	
   void opAssign(DoubleMatrix m) {
     assert(this.rows*this.cols == m.rows*m.cols, "Dimensions do not match for matrix assignment");
 		this.data[] = m.data[];
@@ -141,22 +143,122 @@ struct DoubleMatrix {
     cols = newcols;
   }
   
-  unsafeSetColumns() {}
-  unsafeSetRows() {}
+  unsafeSetColumns(int newcols) {
+		assert(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
+		cols = newcols;
+		rows = this.rows*this.cols / newcols;
+	}
+	
+  unsafeSetRows(int newrows) {
+		assert(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
+		cols = this.rows*this.cols / newrows;
+		rows = newrows;
+	}
+
+	// In case a non-int was passed in, use templates for these functions
+  void unsafeReshape(T1, T2)(T1 nr, T2 nc) {
+		int newrows = nr.to!int;
+		int newcols = nc.to!int;
+    assert(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
+    rows = newrows;
+    cols = newcols;
+  }
+  
+  unsafeSetColumns(T)(T nc) {
+		int newcols = nc.to!int;
+		assert(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
+		cols = newcols;
+		rows = this.rows*this.cols / newcols;
+	}
+	
+  unsafeSetRows(T)(T nr) {
+		int newrows = nr.to!int;
+		assert(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
+		cols = this.rows*this.cols / newrows;
+		rows = newrows;
+	}
 
   DoubleMatrix reshape(int newrows, int newcols) {
     assert(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
     auto result = DoubleMatrix(newrows, newcols);
-    rows = newrows;
-    cols = newcols;
     result.data[] = this.data[];
     return result;
   }
   
-  setColumns() {}
-  setRows() {}
-  dup() {}
+  DoubleMatrix setColumns(int newcols) {
+		assert(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
+		auto result = DoubleMatrix(this.rows*this.cols / newcols, newcols);
+		result.data[] = this.data[];
+		return result;
+	}
+
+  DoubleMatrix setRows(int newrows) {
+		assert(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
+		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
+		result.data[] = this.data[];
+		return result;
+	}
+
+	// Templated versions of these functions to handle non-int input
+  DoubleMatrix reshape(T1, T2)(T1 nr, T2 nc) {
+		int newrows = nr.to!int;
+		int newcols = nc.to!int;
+    assert(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
+    auto result = DoubleMatrix(newrows, newcols);
+    result.data[] = this.data[];
+    return result;
+  }
+  
+  DoubleMatrix setColumns(T)(T nc) {
+		int newcols = nc.to!int;
+		assert(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
+		auto result = DoubleMatrix(this.rows*this.cols / newcols, newcols);
+		result.data[] = this.data[];
+		return result;
+	}
+
+  DoubleMatrix setRows(T)(T nr) {
+		int newrows = nr.to!int;
+		assert(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
+		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
+		result.data[] = this.data[];
+		return result;
+	}
+
+  DoubleMatrix dup() {
+		auto result = DoubleMatrix(this.rows, this.cols);
+		result.data[] = this.data[];
+		return result;
+	}
+	
+	DoubleMatrix unsafeClone() {
+		auto result = DoubleMatrix;
+		result.rows = this.rows;
+		result.cols = this.cols;
+		result.data = this.data;
+	}
 }
 
-stack() {}
-transpose() {}
+DoubleMatrix stack(DoubleMatrix m) {
+	auto result = DoubleMatrix(m.rows*m.cols);
+	result.data[] = m.data[];
+	return result;
+}
+
+DoubleMatrix transpose(DoubleMatrix m) {
+  auto result = DoubleMatrix(m.cols, m.rows);
+  int err = gretl_matrix_transpose(result.matptr, m.matptr);
+  enforce(err == 0, "Taking the transpose of a matrix failed");
+  return result;
+}
+
+void print(DoubleMatrix m, string msg="") {
+	writeln(msg);
+  foreach(row; 0..m.rows) {
+    foreach(col; 0..m.cols) {
+      write(m[row, col], " ");
+    }
+    writeln("");
+  }
+}
+
