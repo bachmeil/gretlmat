@@ -92,4 +92,8 @@ struct DoubleMatrix {
 			}
 		}
 	}
+	
+	int[2] dim() {
+		return [rows, cols];
+	}
 }

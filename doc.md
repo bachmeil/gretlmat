@@ -16,7 +16,7 @@ writeln("Number of rows: ", m.rows);
 writeln("Number of columns: ", m.cols);
 
 // Directly access an element of the matrix
-// Better to use the index operators
+// Better to use the index operators, but this works
 m.data[0] = 4.5;
 ```
 
@@ -39,9 +39,18 @@ auto m = DoubleMatrix(6,2);
 auto v = DoubleMatrix(6);
 ```
 
-The dimensions you pass to the constructor can be of any type that converts to int using `std.conv.to`. This restriction ensures that the conversion makes sense (no strings, for instance) and checks for overflow (the leading case being arguments that are long, as you'd have if you call `length` on a `double[]`.
+The dimensions you pass to the constructor can be of any type that converts to int using `std.conv.to`. This restriction ensures that the conversion makes sense (no strings, for instance) and checks for overflow (the leading case being arguments that are long, as you'd have if you call `length` on a `double[]`).
 
 ```
 double[] a = [1.2, 3.4, 5.6];
 auto m = DoubleMatrix(a.length);
+```
+
+# dim
+
+Returns the dimensions of the vector as an array.
+
+```
+auto m = DoubleMatrix(3,2);
+writeln(m.dim); // [3, 2]
 ```
