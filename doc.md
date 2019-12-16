@@ -103,6 +103,9 @@ You can copy the contents of one `DoubleMatrix` into another with simple assignm
 Example:
 
 ```
+auto m = DoubleMatrix(2, 2);
+auto m2 = DoubleMatrix(4, 1);
+m2 = m; // Works, even though the dimensions are different
 ```
 
 # Reshaping
