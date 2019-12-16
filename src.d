@@ -125,4 +125,34 @@ struct DoubleMatrix {
  
   // dim
   // print
+  
+  void opAssign(DoubleMatrix m) {
+    assert(this.rows*this.cols == m.rows*m.cols, "Dimensions do not match for matrix assignment");
+		this.data[] = m.data[];
+  }
+  
+  void unsafeReshape(int newrows, int newcols) {
+    assert(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
+    rows = newrows;
+    cols = newcols;
+  }
+  
+  unsafeSetColumns() {}
+  unsafeSetRows() {}
+
+  DoubleMatrix reshape(int newrows, int newcols) {
+    assert(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
+    auto result = DoubleMatrix(newrows, newcols);
+    rows = newrows;
+    cols = newcols;
+    result.data[] = this.data[];
+    return result;
+  }
+  
+  setColumns() {}
+  setRows() {}
+  dup() {}
 }
+
+stack() {}
+transpose() {}
