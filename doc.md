@@ -98,7 +98,7 @@ auto m = DoubleMatrix(v); // m is (3x1)
 
 You can copy the contents of one `DoubleMatrix` into another with simple assignment.
 
-*Warning: This can be used to reshape a matrix. Elements are always filled by column, so assigning a (2x2) matrix to a (4x1) matrix is the same as stacking the first column on top of the second column.*
+*Warning: This can be used to reshape a matrix. Elements are always filled by column, so assigning a (2x2) matrix to a (4x1) matrix is the same as stacking the first column on top of the second column. Use `dup` if you want to guarantee dimensions match.*
 
 Example:
 
