@@ -82,7 +82,7 @@ If you set the second argument (`rowElements`) to `false`, it treats each elemen
 double[][] rs;
 rs ~= [1.1, 2.2, 3.3];
 rs ~= [4.4, 5.5, 6.6];
-auto m = DoubleMatrix(rs); // m is (3x2)
+auto m = DoubleMatrix(rs, false); // m is (3x2)
 ```
 
 ### Method 3
