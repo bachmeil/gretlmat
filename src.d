@@ -160,8 +160,8 @@ struct DoubleMatrix {
   
   void unsafeSetColumns(int newcols) {
 		enforce(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
-		cols = newcols;
 		rows = this.rows*this.cols / newcols;
+		cols = newcols;
 	}
 	
   void unsafeSetRows(int newrows) {
@@ -182,13 +182,15 @@ struct DoubleMatrix {
   void unsafeSetColumns(T)(T nc) {
 		int newcols = nc.to!int;
 		enforce(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
-		cols = newcols;
+		// Be sure to do this calculation first
 		rows = this.rows*this.cols / newcols;
+		cols = newcols;
 	}
 	
   void unsafeSetRows(T)(T nr) {
 		int newrows = nr.to!int;
 		enforce(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
+		// Be sure to do this calculation first
 		cols = this.rows*this.cols / newrows;
 		rows = newrows;
 	}
