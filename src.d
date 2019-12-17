@@ -1,10 +1,10 @@
 module gretlmat.base;
-import std.stdio;
+import std.conv, std.exception, std.stdio;
 
 extern(C) {
   int gretl_matrix_multiply(const GretlMatrix * a, const GretlMatrix * b, GretlMatrix * c);
   void gretl_matrix_multiply_by_scalar(GretlMatrix * m, double x);
-  int gretl_matrix_multiply_mod(const GretlMatrix * a, matmod amod, const GretlMatrix * b, matmod bmod, GretlMatrix * c, matmod cmod);
+  //~ int gretl_matrix_multiply_mod(const GretlMatrix * a, matmod amod, const GretlMatrix * b, matmod bmod, GretlMatrix * c, matmod cmod);
   int gretl_matrix_cholesky_decomp(GretlMatrix * a);
   int gretl_matrix_kronecker_product(const GretlMatrix * A, const GretlMatrix * B, GretlMatrix * K);
   int gretl_LU_solve(GretlMatrix * a, GretlMatrix * b);
@@ -132,25 +132,40 @@ struct DoubleMatrix {
 		return [this.rows, this.cols];
 	}
 	
+  double opIndex(int r, int c) {
+    enforce(r < this.rows, "First index exceeds the number of rows");
+    enforce(c < this.cols, "Second index exceed the number of columns");
+    return data[c*this.rows + r];
+  }
+
+	// Templated versions to accommodate long arguments
+  double opIndex(T1, T2)(T1 _r, T2 _c) {
+		int r = _r.to!int;
+		int c = _c.to!int;
+    enforce(r < this.rows, "First index exceeds the number of rows");
+    enforce(c < this.cols, "Second index exceed the number of columns");
+    return data[c*this.rows + r];
+  }
+	
   void opAssign(DoubleMatrix m) {
-    assert(this.rows*this.cols == m.rows*m.cols, "Dimensions do not match for matrix assignment");
+    enforce(this.rows*this.cols == m.rows*m.cols, "Dimensions do not match for matrix assignment");
 		this.data[] = m.data[];
   }
   
   void unsafeReshape(int newrows, int newcols) {
-    assert(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
+    enforce(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
     rows = newrows;
     cols = newcols;
   }
   
-  unsafeSetColumns(int newcols) {
-		assert(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
+  void unsafeSetColumns(int newcols) {
+		enforce(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
 		cols = newcols;
 		rows = this.rows*this.cols / newcols;
 	}
 	
-  unsafeSetRows(int newrows) {
-		assert(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
+  void unsafeSetRows(int newrows) {
+		enforce(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
 		cols = this.rows*this.cols / newrows;
 		rows = newrows;
 	}
@@ -159,41 +174,41 @@ struct DoubleMatrix {
   void unsafeReshape(T1, T2)(T1 nr, T2 nc) {
 		int newrows = nr.to!int;
 		int newcols = nc.to!int;
-    assert(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
+    enforce(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
     rows = newrows;
     cols = newcols;
   }
   
-  unsafeSetColumns(T)(T nc) {
+  void unsafeSetColumns(T)(T nc) {
 		int newcols = nc.to!int;
-		assert(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
+		enforce(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
 		cols = newcols;
 		rows = this.rows*this.cols / newcols;
 	}
 	
-  unsafeSetRows(T)(T nr) {
+  void unsafeSetRows(T)(T nr) {
 		int newrows = nr.to!int;
-		assert(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
+		enforce(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
 		cols = this.rows*this.cols / newrows;
 		rows = newrows;
 	}
 
   DoubleMatrix reshape(int newrows, int newcols) {
-    assert(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
+    enforce(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
     auto result = DoubleMatrix(newrows, newcols);
     result.data[] = this.data[];
     return result;
   }
   
   DoubleMatrix setColumns(int newcols) {
-		assert(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
+		enforce(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
 		auto result = DoubleMatrix(this.rows*this.cols / newcols, newcols);
 		result.data[] = this.data[];
 		return result;
 	}
 
   DoubleMatrix setRows(int newrows) {
-		assert(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
+		enforce(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
 		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
 		result.data[] = this.data[];
 		return result;
@@ -203,7 +218,7 @@ struct DoubleMatrix {
   DoubleMatrix reshape(T1, T2)(T1 nr, T2 nc) {
 		int newrows = nr.to!int;
 		int newcols = nc.to!int;
-    assert(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
+    enforce(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
     auto result = DoubleMatrix(newrows, newcols);
     result.data[] = this.data[];
     return result;
@@ -211,7 +226,7 @@ struct DoubleMatrix {
   
   DoubleMatrix setColumns(T)(T nc) {
 		int newcols = nc.to!int;
-		assert(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
+		enforce(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
 		auto result = DoubleMatrix(this.rows*this.cols / newcols, newcols);
 		result.data[] = this.data[];
 		return result;
@@ -219,7 +234,7 @@ struct DoubleMatrix {
 
   DoubleMatrix setRows(T)(T nr) {
 		int newrows = nr.to!int;
-		assert(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
+		enforce(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
 		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
 		result.data[] = this.data[];
 		return result;
@@ -232,10 +247,11 @@ struct DoubleMatrix {
 	}
 	
 	DoubleMatrix unsafeClone() {
-		auto result = DoubleMatrix;
+		DoubleMatrix result;
 		result.rows = this.rows;
 		result.cols = this.cols;
 		result.data = this.data;
+		return result;
 	}
 }
 

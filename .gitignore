@@ -15,6 +15,7 @@
 
 # Executables
 *.exe
+bin/*
 
 # DUB
 .dub
