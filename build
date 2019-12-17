@@ -1,0 +1,4 @@
+#! /bin/bash
+dmd $1test.d src.d -of$1test -L-lgretl-1.0
+mv $1test bin/
+./bin/$1test
