@@ -48,8 +48,11 @@ struct DoubleMatrix {
   int rows;
   int cols;
   private GretlMatrix temp;
-
   alias mat this;
+
+	invariant(rows > 0, "Number of rows has to be positive");
+	invariant(cols > 0, "Number of columns has to be positive");
+	invariant(rows*cols == data.length, "Dimensions do not match the underlying data array");
 
   GretlMatrix mat() {
 		temp.rows = rows;
@@ -70,6 +73,7 @@ struct DoubleMatrix {
   }
 
   this(int r, int c=1) {
+		assert(r*c > 0, "Need to allocate a positive number of elements in a DoubleMatrix");
     data = new double[r*c];
     rows = r;
     cols = c;
@@ -78,6 +82,7 @@ struct DoubleMatrix {
   // Use a template to allow conversion of arguments to int
   // Check for overflow just to be safe
   this(T1, T2)(T1 r, T2 c=1) {
+		assert(r*c > 0, "Need to allocate a positive number of elements in a DoubleMatrix");
 		data = new double[r*c];
 		rows = r.to!int;
 		cols = c.to!int;
@@ -104,14 +109,11 @@ struct DoubleMatrix {
           data[col*rows + row.to!int] = vals[row];
         }
       }
-	
-	int[2] dim() {
-		return [rows, cols];
-	}
     }
 	}
   
 	this(GretlMatrix * m) {
+		assert(m.cols*m.rows > 0, "Need to allocate a positive number of elements in a DoubleMatrix");
 		data = new double[m.cols*m.rows];
 		rows = m.rows;
 		cols = m.cols;
@@ -132,6 +134,10 @@ struct DoubleMatrix {
 		return [this.rows, this.cols];
 	}
 	
+	int length() {
+		return data.length.to!int;
+	}
+	
   double opIndex(int r, int c) {
     enforce(r < this.rows, "First index exceeds the number of rows");
     enforce(c < this.cols, "Second index exceed the number of columns");
@@ -148,63 +154,63 @@ struct DoubleMatrix {
   }
 	
   void opAssign(DoubleMatrix m) {
-    enforce(this.rows*this.cols == m.rows*m.cols, "Dimensions do not match for matrix assignment");
+    enforce(this.data.length == m.data.length, "Dimensions do not match for matrix assignment");
 		this.data[] = m.data[];
   }
   
-  void unsafeReshape(int newrows, int newcols) {
-    enforce(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
+  // Invariant conditions for DoubleMatrix will catch dimension mismatches with the data
+  void unsafeReshape(int newrows, int newcols=1) {
     rows = newrows;
     cols = newcols;
   }
   
+  // The enforce statement here is more informative than relying on the invariant conditions
   void unsafeSetColumns(int newcols) {
-		enforce(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
-		rows = this.rows*this.cols / newcols;
+		//~ enforce(this.length % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
+		rows = this.length / newcols;
 		cols = newcols;
 	}
 	
   void unsafeSetRows(int newrows) {
-		enforce(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
-		cols = this.rows*this.cols / newrows;
+		//~ enforce(this.length % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
+		cols = this.length / newrows;
 		rows = newrows;
 	}
 
 	// In case a non-int was passed in, use templates for these functions
-  void unsafeReshape(T1, T2)(T1 nr, T2 nc) {
+  void unsafeReshape(T1, T2)(T1 nr, T2 nc=1) {
 		int newrows = nr.to!int;
 		int newcols = nc.to!int;
-    enforce(this.rows*this.cols == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
+    //~ enforce(this.length == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
     rows = newrows;
     cols = newcols;
   }
   
   void unsafeSetColumns(T)(T nc) {
 		int newcols = nc.to!int;
-		enforce(this.rows*this.cols % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
-		// Be sure to do this calculation first
-		rows = this.rows*this.cols / newcols;
+		//~ enforce(this.length % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
+		// Be sure to do this calculation first!
+		rows = this.length / newcols;
 		cols = newcols;
 	}
 	
   void unsafeSetRows(T)(T nr) {
 		int newrows = nr.to!int;
-		enforce(this.rows*this.cols % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
-		// Be sure to do this calculation first
+		//~ enforce(this.length % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
 		cols = this.rows*this.cols / newrows;
 		rows = newrows;
 	}
 
-  DoubleMatrix reshape(int newrows, int newcols) {
-    enforce(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
+  DoubleMatrix reshape(int newrows, int newcols=1) {
+    //~ enforce(this.length == newrows*newcols, "Cannot use reshape: Dimensions do not match");
     auto result = DoubleMatrix(newrows, newcols);
     result.data[] = this.data[];
     return result;
   }
   
   DoubleMatrix setColumns(int newcols) {
-		enforce(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
-		auto result = DoubleMatrix(this.rows*this.cols / newcols, newcols);
+		//~ enforce(this.length % newcols == 0, "argument to setColumns is not compatible with current dimensions");
+		auto result = DoubleMatrix(this.length / newcols, newcols);
 		result.data[] = this.data[];
 		return result;
 	}
@@ -217,7 +223,7 @@ struct DoubleMatrix {
 	}
 
 	// Templated versions of these functions to handle non-int input
-  DoubleMatrix reshape(T1, T2)(T1 nr, T2 nc) {
+  DoubleMatrix reshape(T1, T2)(T1 nr, T2 nc=1) {
 		int newrows = nr.to!int;
 		int newcols = nc.to!int;
     enforce(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");

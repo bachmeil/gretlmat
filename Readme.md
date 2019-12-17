@@ -29,7 +29,9 @@ GPLv2
     but they can make the code hard to read and work with. They should
     be used only when it really is the simplest solution, and there
     should be comments in the code for someone that doesn't have that
-    knowledge.
+    knowledge. This means there is lots of code duplication, and that's
+    intentional. It is possible that I might remove some of the
+    duplication if I can do so without making it hard to change the code.
 - Stability - only bug fixes after the 1.0 release. It should be possible
     to use this library ten years in the future even if I make no updates.
     Users can write code knowing that it will work even if I disappear.
@@ -63,3 +65,9 @@ GPLv2
     you want. I understand that some companies want a more freeloader-friendly
     license. I'm available for hire as a consultant if you want me to do
     related work under a different license.
+
+# Notes
+
+- Currently under development
+- Currently only tested on my own Ubuntu Linux setup
+- Currently testing by running a test file and looking at the output
