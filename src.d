@@ -138,10 +138,18 @@ struct DoubleMatrix {
 		return data.length.to!int;
 	}
 	
+	// Find element number associated with index
+	// Include all asserts in here
+	int elt(int r, int c) {
+		assert(r >= 0, "Cannot have a negative row index");
+		assert(c >= 0, "Cannot have a positive row index");
+		assert(r < this.rows, "First index exceeds the number of rows");
+		assert(c < this.cols, "Second index exceeds the number of columns");
+		return c*this.rows + r;
+	}
+	
   double opIndex(int r, int c) {
-    enforce(r < this.rows, "First index exceeds the number of rows");
-    enforce(c < this.cols, "Second index exceed the number of columns");
-    return data[c*this.rows + r];
+    return data[elt(r, c)];
   }
 
 	// Templated versions to accommodate long arguments
@@ -158,6 +166,56 @@ struct DoubleMatrix {
 		this.data[] = m.data[];
   }
   
+  // Safe (non-mutating) approach to changing dimensions
+  DoubleMatrix reshape(int newrows, int newcols=1) {
+    auto result = DoubleMatrix(newrows, newcols);
+    assert(result.length == this.length, "Wrong number of elements in call to reshape");
+    result.data[] = this.data[];
+    return result;
+  }
+  
+  DoubleMatrix setColumns(int newcols) {
+		assert(newcols > 0, "Number of columns has to be greater than zero");
+		auto result = DoubleMatrix(this.length / newcols, newcols);
+    assert(result.length == this.length, "Wrong number of elements in call to setColumns");
+		result.data[] = this.data[];
+		return result;
+	}
+
+  DoubleMatrix setRows(int newrows) {
+		assert(newrows > 0, "Number of rows has to be greater than zero");
+		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
+    assert(result.length == this.length, "Wrong number of elements in call to setRows");
+		result.data[] = this.data[];
+		return result;
+	}
+
+	// Templated versions of the above functions to handle non-int input
+  DoubleMatrix reshape(T1, T2)(T1 nr, T2 nc=1) {
+		int newrows = nr.to!int;
+		int newcols = nc.to!int;
+    enforce(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
+    auto result = DoubleMatrix(newrows, newcols);
+    result.data[] = this.data[];
+    return result;
+  }
+  
+  DoubleMatrix setColumns(T)(T nc) {
+		int newcols = nc.to!int;
+		enforce(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
+		auto result = DoubleMatrix(this.rows*this.cols / newcols, newcols);
+		result.data[] = this.data[];
+		return result;
+	}
+
+  DoubleMatrix setRows(T)(T nr) {
+		int newrows = nr.to!int;
+		enforce(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
+		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
+		result.data[] = this.data[];
+		return result;
+	}
+
   // Invariant conditions for DoubleMatrix will catch dimension mismatches with the data
   void unsafeReshape(int newrows, int newcols=1) {
     rows = newrows;
@@ -199,53 +257,6 @@ struct DoubleMatrix {
 		//~ enforce(this.length % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
 		cols = this.rows*this.cols / newrows;
 		rows = newrows;
-	}
-
-  DoubleMatrix reshape(int newrows, int newcols=1) {
-    //~ enforce(this.length == newrows*newcols, "Cannot use reshape: Dimensions do not match");
-    auto result = DoubleMatrix(newrows, newcols);
-    result.data[] = this.data[];
-    return result;
-  }
-  
-  DoubleMatrix setColumns(int newcols) {
-		//~ enforce(this.length % newcols == 0, "argument to setColumns is not compatible with current dimensions");
-		auto result = DoubleMatrix(this.length / newcols, newcols);
-		result.data[] = this.data[];
-		return result;
-	}
-
-  DoubleMatrix setRows(int newrows) {
-		enforce(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
-		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
-		result.data[] = this.data[];
-		return result;
-	}
-
-	// Templated versions of these functions to handle non-int input
-  DoubleMatrix reshape(T1, T2)(T1 nr, T2 nc=1) {
-		int newrows = nr.to!int;
-		int newcols = nc.to!int;
-    enforce(this.rows*this.cols == newrows*newcols, "Cannot use reshape: Dimensions do not match");
-    auto result = DoubleMatrix(newrows, newcols);
-    result.data[] = this.data[];
-    return result;
-  }
-  
-  DoubleMatrix setColumns(T)(T nc) {
-		int newcols = nc.to!int;
-		enforce(this.rows*this.cols % newcols == 0, "argument to setColumns is not compatible with current dimensions");
-		auto result = DoubleMatrix(this.rows*this.cols / newcols, newcols);
-		result.data[] = this.data[];
-		return result;
-	}
-
-  DoubleMatrix setRows(T)(T nr) {
-		int newrows = nr.to!int;
-		enforce(this.rows*this.cols % newrows == 0, "argument to setRows is not compatible with current dimensions");
-		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
-		result.data[] = this.data[];
-		return result;
 	}
 
   DoubleMatrix dup() {
