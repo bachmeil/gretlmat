@@ -26,5 +26,9 @@ void main() {
 	DoubleMatrix m2 = m.reshape(4,1);
 	m2.print("New matrix");
 	m.print("Old matrix is unchanged");
+	DoubleMatrix m3 = m.stack();
+	m3.print("Stacked matrix");
+	DoubleMatrix m4 = t(m);
+	m4.print("Transposed");
 }
 	

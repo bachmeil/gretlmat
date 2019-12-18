@@ -276,6 +276,14 @@ DoubleMatrix t(DoubleMatrix m) {
   return result;
 }
 
+DoubleMatrix chol(GretlMatrix m) {
+  assert(m.rows == m.cols, "You are trying to compute a Cholesky decomposition of a non-square matrix");
+  auto result = dup(m);
+  int err = gretl_matrix_cholesky_decomp(result.matptr);
+  enforce(err == 0, "Cholesky decomposition failed");
+  return result;
+}
+
 void print(DoubleMatrix m, string msg="") {
 	writeln(msg);
   foreach(row; 0..m.rows) {
