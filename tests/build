@@ -1,0 +1,6 @@
+#! /bin/bash
+set -e # Stop on error
+
+dmd $1.d ../src.d -of$1 -L-lgretl-1.0
+mv $1 ../bin/
+../bin/$1
