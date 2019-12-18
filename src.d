@@ -49,10 +49,14 @@ struct DoubleMatrix {
   int cols;
   private GretlMatrix temp;
   alias mat this;
+  string[] rowNames = [];
+  string[] colNames = [];
 
-	invariant(rows > 0, "Number of rows has to be positive");
-	invariant(cols > 0, "Number of columns has to be positive");
-	invariant(rows*cols == data.length, "Dimensions do not match the underlying data array");
+	invariant {
+		assert(rows > 0, "Number of rows has to be positive");
+		assert(cols > 0, "Number of columns has to be positive");
+		assert(rows*cols == data.length, "Dimensions do not match the underlying data array");
+	}
 
   GretlMatrix mat() {
 		temp.rows = rows;
@@ -151,6 +155,18 @@ struct DoubleMatrix {
 		return elt(r.to!int, c.to!int);
 	}
 	
+	void initRowNames() {
+		foreach(ii; 0..rows) {
+			rowNames[ii] = "r" ~ ii.to!string;
+		}
+	}
+	
+	void initColumnNames() {
+		foreach(ii; 0..cols) {
+			colNames[ii] = "c" ~ ii.to!string;
+		}
+	}
+
   double opIndex(int r, int c) {
     return data[elt(r, c)];
   }
