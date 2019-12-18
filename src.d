@@ -97,7 +97,7 @@ struct DoubleMatrix {
       cols = to!int(m[0].length);
       foreach(row, vals; m) {
         foreach(col; 0..cols) {
-          data[col*rows+row.to!int] = vals[col];
+          data[elt(row, col)] = vals[col];
         }
       }
     // Treat each element as a column
@@ -106,20 +106,19 @@ struct DoubleMatrix {
       cols = to!int(m.length);
       foreach(col, vals; m) {
         foreach(row; 0..rows) {
-          data[col*rows + row.to!int] = vals[row];
+          data[elt(row, col)] = vals[row];
         }
       }
     }
 	}
   
 	this(GretlMatrix * m) {
-		assert(m.cols*m.rows > 0, "Need to allocate a positive number of elements in a DoubleMatrix");
 		data = new double[m.cols*m.rows];
 		rows = m.rows;
 		cols = m.cols;
 		foreach(row; 0..rows) {
 			foreach(col; 0..cols) {
-				data[col*rows+row] = m.ptr[col*rows+row];
+				data[elt(row, col)] = m.ptr[elt(row, col)];
 			}
 		}
 	}
@@ -147,18 +146,27 @@ struct DoubleMatrix {
 		assert(c < this.cols, "Second index exceeds the number of columns");
 		return c*this.rows + r;
 	}
+
+	int elt(T1, T2)(T1 r, T2 c) {
+		return elt(r.to!int, c.to!int);
+	}
 	
   double opIndex(int r, int c) {
     return data[elt(r, c)];
   }
 
-	// Templated versions to accommodate long arguments
-  double opIndex(T1, T2)(T1 _r, T2 _c) {
-		int r = _r.to!int;
-		int c = _c.to!int;
-    return data[elt(r, c)];
+  double opIndex(T1, T2)(T1 r, T2 c) {
+    return data[elt(r.to!int, c.to!int)];
   }
-	
+  
+  void opIndexAssign(double v, int r, int c) {
+    ptr[elt(r, c)] = v;
+  }
+  
+  void opIndexAssign(T1, T2)(double v, T1 r, T2 c) {
+		ptr[elt(r.to!int, c.to!int)] = v;
+	}
+
   void opAssign(DoubleMatrix m) {
     assert(this.data.length == m.data.length, "Dimensions do not match for matrix assignment");
 		this.data[] = m.data[];
@@ -201,45 +209,39 @@ struct DoubleMatrix {
 		return setRows(nr.to!int);
 	}
 
-  // Invariant conditions for DoubleMatrix will catch dimension mismatches with the data
+  // No need for assert/enforce statements inside this method
+  // Invariant conditions and existing asserts for DoubleMatrix should 
+  // catch all possible invalid data
   void unsafeReshape(int newrows, int newcols=1) {
     rows = newrows;
     cols = newcols;
   }
   
-  // The enforce statement here is more informative than relying on the invariant conditions
   void unsafeSetColumns(int newcols) {
-		//~ enforce(this.length % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
 		rows = this.length / newcols;
 		cols = newcols;
 	}
 	
   void unsafeSetRows(int newrows) {
-		//~ enforce(this.length % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
 		cols = this.length / newrows;
 		rows = newrows;
 	}
 
-	// In case a non-int was passed in, use templates for these functions
+	// Use templates for non-int arguments
   void unsafeReshape(T1, T2)(T1 nr, T2 nc=1) {
-		int newrows = nr.to!int;
-		int newcols = nc.to!int;
-    //~ enforce(this.length == newrows*newcols, "Cannot use unsafeReshape: Dimensions do not match");
-    rows = newrows;
-    cols = newcols;
+    rows = nr.to!int;
+    cols = nc.to!int;
   }
   
   void unsafeSetColumns(T)(T nc) {
 		int newcols = nc.to!int;
-		//~ enforce(this.length % newcols == 0, "argument to unsafeSetColumns is not compatible with current dimensions");
-		// Be sure to do this calculation first!
+		// Do this calculation first!
 		rows = this.length / newcols;
 		cols = newcols;
 	}
 	
   void unsafeSetRows(T)(T nr) {
 		int newrows = nr.to!int;
-		//~ enforce(this.length % newrows == 0, "argument to unsafeSetRows is not compatible with current dimensions");
 		cols = this.rows*this.cols / newrows;
 		rows = newrows;
 	}
@@ -260,15 +262,15 @@ struct DoubleMatrix {
 }
 
 DoubleMatrix stack(DoubleMatrix m) {
-	auto result = DoubleMatrix(m.rows*m.cols);
+	auto result = DoubleMatrix(m.length);
 	result.data[] = m.data[];
 	return result;
 }
 
-DoubleMatrix transpose(DoubleMatrix m) {
+DoubleMatrix t(DoubleMatrix m) {
   auto result = DoubleMatrix(m.cols, m.rows);
   int err = gretl_matrix_transpose(result.matptr, m.matptr);
-  enforce(err == 0, "Taking the transpose of a matrix failed");
+  enforce(err == 0, "Taking the transpose of a matrix failed with error code " ~ err.to!string);
   return result;
 }
 
