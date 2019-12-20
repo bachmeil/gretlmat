@@ -1,4 +1,7 @@
-Things not yet finished:
+Things not yet finished. I'd like to incorporate all of this before
+calling the project finished and doing a 1.0 release. Most of this
+functionality already exists in my other projects, so it's just a matter
+of pulling it in, testing, and making necessary adjustments.
 
 - `Row` and `Col`. This would allow access to individual rows and columns
     without copying.
@@ -8,6 +11,14 @@ Things not yet finished:
 - `ByElement`. Iterate over a matrix without nested loops. This is one
     that I haven't actually done before, and I'm still working out the
     details.
+- `_all` as a way to index an entire row or column, like
+
+    ```
+    m[_all, 3] // All rows of the fourth column
+    m[3, _all] // All columns of the fourth row
+    ```
+    
+    This would differ from the `Row` and `Col` types by returning a `DoubleMatrix`.
 - `Submatrix` type. It's important to be able to do things like
     
     ```
