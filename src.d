@@ -161,6 +161,15 @@ struct DoubleMatrix {
     return data[elt(r.to!int, c.to!int)];
   }
   
+  // Support for multidimensional indexing
+  int[2] opSlice(int dim)(int begin, int end) {
+    return [begin, end];
+  }
+  
+  Submatrix opIndex(int[2] rr, int[2] cc) {
+    return Submatrix(this, rr[0], cc[0], rr[1], cc[1]);
+  }
+
   void opIndexAssign(double v, int r, int c) {
     ptr[elt(r, c)] = v;
   }
@@ -445,15 +454,15 @@ struct Submatrix {
     }
   }
 
-  void opAssign(GretlMatrix m) {
-    enforce(m.rows == this.subRows, "Number of rows does not match");
-    enforce(m.cols == this.subCols, "Number of columns does not match");
-    foreach(col; 0..m.cols) {
-      foreach(row; 0..m.rows) {
-        this[row, col] = m[row, col];
-      }
-    }
-  }
+  //~ void opAssign(GretlMatrix m) {
+    //~ enforce(m.rows == this.subRows, "Number of rows does not match");
+    //~ enforce(m.cols == this.subCols, "Number of columns does not match");
+    //~ foreach(col; 0..m.cols) {
+      //~ foreach(row; 0..m.rows) {
+        //~ this[row, col] = m[row, col];
+      //~ }
+    //~ }
+  //~ }
 
   // We have this function defined because there is some overhead to using alias this with a DoubleMatrix.
   // No such overhead with an RMatrix.
@@ -494,3 +503,19 @@ struct Submatrix {
 		}
 	}   
 }
+
+DoubleMatrix SubmatrixAddition(Submatrix x, Submatrix y) {
+  assert(x.subRows == y.subRows, "Rows for Submatrix addition do not match");
+  assert(x.subCols == y.subCols, "Rows for Submatrix addition do not match");
+  auto result = DoubleMatrix(x.subRows, x.subCols);
+  foreach(c; 0..result.cols) {
+    foreach(r; 0..result.rows) {
+      result[r, c] = x[r, c]+y[r, c];
+    }
+  }
+  return result;
+}
+  
+  
+  
+  

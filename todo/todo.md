@@ -10,7 +10,7 @@ of pulling it in, testing, and making necessary adjustments.
 - `ByRow` and `ByColumn`. Iterate over a matrix by row or by column.
 - `ByElement`. Iterate over a matrix without nested loops. This is one
     that I haven't actually done before, and I'm still working out the
-    details.
+    details. This will require another overload of the opIndex functions.
 - `_all` as a way to index an entire row or column, like
 
     ```
@@ -68,6 +68,9 @@ of pulling it in, testing, and making necessary adjustments.
     The number of generalized
     `Submatrix` types in gretlmat will be limited, but they would provide a
     foundation to build on.
+    
+    The transpose operation can be handled lazily, i.e., you don't need to
+    actually deal with it until it's used in an operation.
     
 - `NamedMatrix` and `NamedVector`. This would allow indexing by name rather
     than number, which is less error-prone.
