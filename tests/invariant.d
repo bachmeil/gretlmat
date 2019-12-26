@@ -92,9 +92,6 @@ void main() {
 	} catch(AssertError exc) {
 		mes(exc, 12);
 	}
-	
-	//~ try {
-		//~ DoubleMatrix m2 = m.setColumns(
 	try {
 		m.unsafeSetColumns(3);
 	} catch(AssertError exc) {

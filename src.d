@@ -82,7 +82,6 @@ struct DoubleMatrix {
   }
   
   // Use a template to allow conversion of arguments to int
-  // Check for overflow just to be safe
   this(T1, T2)(T1 r, T2 c=1) {
 		assert(r*c > 0, "Need to allocate a positive number of elements in a DoubleMatrix");
 		data = new double[r*c];
@@ -141,6 +140,7 @@ struct DoubleMatrix {
 	
 	// Find element number associated with index
 	// Include all asserts in here
+  // These are stripped out in release mode
 	int elt(int r, int c) {
 		assert(r >= 0, "Cannot have a negative row index");
 		assert(c >= 0, "Cannot have a positive row index");
@@ -183,7 +183,7 @@ struct DoubleMatrix {
   }
   
   DoubleMatrix setColumns(int newcols) {
-		//~ assert(newcols > 0, "Number of columns has to be greater than zero");
+		assert(newcols > 0, "Number of columns has to be greater than zero");
 		auto result = DoubleMatrix(this.length / newcols, newcols);
     assert(result.length == this.length, "Wrong number of elements in call to setColumns");
 		result.data[] = this.data[];
@@ -191,7 +191,7 @@ struct DoubleMatrix {
 	}
 
   DoubleMatrix setRows(int newrows) {
-		//~ assert(newrows > 0, "Number of rows has to be greater than zero");
+		assert(newrows > 0, "Number of rows has to be greater than zero");
 		auto result = DoubleMatrix(newrows, this.rows*this.cols / newrows);
     assert(result.length == this.length, "Wrong number of elements in call to setRows");
 		result.data[] = this.data[];
@@ -248,12 +248,6 @@ struct DoubleMatrix {
 		rows = newrows;
 	}
 
-  DoubleMatrix dup() {
-		auto result = DoubleMatrix(this.rows, this.cols);
-		result.data[] = this.data[];
-		return result;
-	}
-	
 	DoubleMatrix unsafeClone() {
 		DoubleMatrix result;
 		result.rows = this.rows;
@@ -263,6 +257,12 @@ struct DoubleMatrix {
 	}
 }
 
+DoubleMatrix dup(DoubleMatrix m) {
+  auto result = DoubleMatrix(m.rows, m.cols);
+  result.data[] = m.data[];
+  return result;
+}
+	
 DoubleMatrix stack(DoubleMatrix m) {
 	auto result = DoubleMatrix(m.length);
 	result.data[] = m.data[];
@@ -276,7 +276,7 @@ DoubleMatrix t(DoubleMatrix m) {
   return result;
 }
 
-DoubleMatrix chol(GretlMatrix m) {
+DoubleMatrix chol(DoubleMatrix m) {
   assert(m.rows == m.cols, "You are trying to compute a Cholesky decomposition of a non-square matrix");
   auto result = dup(m);
   int err = gretl_matrix_cholesky_decomp(result.matptr);
@@ -294,3 +294,203 @@ void print(DoubleMatrix m, string msg="") {
   }
 }
 
+
+// This struct holds a reference to the data in a matrix.
+// It's up to the user to make sure the reference doesn't outlive the underlying matrix.
+// They are designed to be short-lived, for convenience, not for actual data storage.
+// The user should normally not be using Submatrix types directly
+struct Submatrix {
+  // Original matrix
+  double * ptr;
+  int rows;
+
+  // The submatrix
+  int rowOffset;
+  int colOffset;
+  int subRows;
+  int subCols;
+  alias dup this;
+
+  DoubleMatrix dup() {
+    auto result = DoubleMatrix(subRows, subCols);
+    foreach(col; 0..subCols) {
+      foreach(row; 0..subRows) {
+        result[row, col] = this[row, col];
+      }
+    }
+    return result;
+  }
+
+  this(DoubleMatrix m, int r0, int c0, int r1, int c1) {
+    ptr = m.ptr;
+    rows = m.rows;
+    subRows = r1-r0;
+    subCols = c1-c0;
+    rowOffset = r0;
+    colOffset = c0;
+  }
+
+  this(T1, T2, T3, T4)(DoubleMatrix m, T1 r0, T2 c0, T3 r1, T4 c1) {
+    this(m, r0.to!int, c0.to!int, r1.to!int, c1.to!int);
+  }
+
+  this(DoubleMatrix m) {
+    ptr = m.ptr;
+    rows = m.rows;
+    subRows = m.rows;
+    subCols = m.cols;
+    rowOffset = 0;
+    colOffset = 0;
+  }
+
+  this(GretlMatrix m, int r0, int c0, int r1, int c1) {
+    ptr = m.ptr;
+    rows = m.rows;
+    subRows = r1-r0;
+    subCols = c1-c0;
+    rowOffset = r0;
+    colOffset = c0;
+  }
+
+  this(T1, T2, T3, T4)(GretlMatrix m, T1 r0, T2 c0, T3 r1, T4 c1) {
+    this(m, r0.to!int, c0.to!int, r1.to!int, c1.to!int);
+  }
+
+  this(GretlMatrix m) {
+    ptr = m.ptr;
+    rows = m.rows;
+    subRows = m.rows;
+    subCols = m.cols;
+    rowOffset = 0;
+    colOffset = 0;
+  }
+
+  double opIndex(int r, int c) {
+    assert(r >= 0, "Row index cannot be negative");
+    assert(c >= 0, "Column index cannot be negative");
+    assert(r < subRows, "First index on Submatrix has to be less than the number of rows");
+    assert(c < subCols, "Second index on Submatrix has to be less than the number of columns");
+    int newr = r+rowOffset;
+    int newc = c+colOffset;
+    return ptr[newc*rows + newr];
+  }
+  
+  double opIndex(T1, T2)(T1 r, T2 c) {
+    opIndex(r.to!int, c.to!int);
+  }
+
+  void opIndexAssign(double v, int r, int c) {
+    assert(r >= 0, "Row index cannot be negative");
+    assert(c >= 0, "Column index cannot be negative");
+    assert(r < subRows, "First index on Submatrix has to be less than the number of rows");
+    assert(c < subCols, "Second index on Submatrix has to be less than the number of columns");
+    int newr = r+rowOffset;
+    int newc = c+colOffset;
+    ptr[newc*rows + newr] = v;
+  }
+
+  void opIndexAssign(T1, T2)(double v, T1 r, T2 c) {
+    opIndexAssign(v, r.to!int, c.to!int);
+  }
+  
+  DoubleMatrix opBinary(string op)(Submatrix sm) {
+    static if(op == "+") {
+      return SubmatrixAddition(this, sm);
+    }
+    static if(op == "-") {
+      return SubmatrixSubtraction(this, sm);
+    }
+    static if(op == "*") {
+      return SubmatrixMultiplication(this, sm);
+    }
+    static if(op == "/") {
+      return SubmatrixDivision(this, sm);
+    }
+  }
+  
+
+  /* It's handy to be able to convert a submatrix that has only one row
+   * or one column into an array.
+   */
+  double[] array() {
+		enforce( (subCols == 1) | (subRows == 1), "Cannot convert a submatrix with multiple rows and columns into an array");
+		double[] result;
+		if (subCols == 1) {
+			foreach(row; 0..subRows) {
+				result ~= this[row,0];
+			}
+		} else {
+			foreach(col; 0..subCols) {
+				result ~= this[0,col];
+			}
+		}
+		return result;
+	}
+
+  void opAssign(double v) {
+    foreach(col; 0..subCols) {
+      foreach(row; 0..subRows) {
+        this[row, col] = v;
+      }
+    }
+  }
+
+  void opAssign(Submatrix m) {
+    enforce(m.subRows == this.subRows, "Number of rows does not match");
+    enforce(m.subCols == this.subCols, "Number of columns does not match");
+    foreach(col; 0..subCols) {
+      foreach(row; 0..subRows) {
+        this[row, col] = m[row, col];
+      }
+    }
+  }
+
+  void opAssign(GretlMatrix m) {
+    enforce(m.rows == this.subRows, "Number of rows does not match");
+    enforce(m.cols == this.subCols, "Number of columns does not match");
+    foreach(col; 0..m.cols) {
+      foreach(row; 0..m.rows) {
+        this[row, col] = m[row, col];
+      }
+    }
+  }
+
+  // We have this function defined because there is some overhead to using alias this with a DoubleMatrix.
+  // No such overhead with an RMatrix.
+  void opAssign(DoubleMatrix m) {
+    enforce(m.rows == this.subRows, "Number of rows does not match");
+    enforce(m.cols == this.subCols, "Number of columns does not match");
+    foreach(col; 0..m.cols) {
+      foreach(row; 0..m.rows) {
+        this[row, col] = m[row, col];
+      }
+    }
+  }
+  
+  double[] opSlice(int i0, int i1) {
+		enforce( (subCols == 1) | (subRows == 1), "Can only slice a submatrix with one row or one column. Other slicing of a Submatrix is not supported at this time.");
+		double[] result;
+		if (subCols == 1) {
+			foreach(row; i0..i1) {
+				result ~= this[row,0];
+			}
+		} else {
+			foreach(col; i0..i1) {
+				result ~= this[0,col];
+			}
+		}
+		return result;
+	}
+  
+	version(r) {
+		RMatrix rmat() {
+			auto result = RMatrix(subRows, subCols);
+			foreach(col; 0..subCols) {
+				foreach(row; 0..subRows) {
+					result[row, col] = this[row, col];
+				}
+			}
+			return result;
+		}
+	}   
+}

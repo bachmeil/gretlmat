@@ -24,6 +24,8 @@ of pulling it in, testing, and making necessary adjustments.
     ```
     m[0..3, 0..3] = m2[1..4, 1..4];
     ```
+    
+    A `Submatrix` holds a reference to the data.
 - Generalized `Submatrix` types. We can take the `Submatrix` concept a
     step further. Suppose you want to set the diagonal of matrix `m1`
     equal to the diagonal of matrix `m2`. You could set up a `foreach`
@@ -74,3 +76,4 @@ of pulling it in, testing, and making necessary adjustments.
     of the data array, or taking a slice if you want to drop the initial
     elements. You can even reserve additional elements upon allocation,
     so you can add later without concern that there will be copying.
+- Row and Col for Submatrix

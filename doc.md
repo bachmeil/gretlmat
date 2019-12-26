@@ -1,6 +1,27 @@
+# Installation (Ubuntu)
+
+The only dependency is libgretl. On Ubuntu, this is satisfied by installing the package `libgretl1-dev`.
+
+# Usage (Ubuntu)
+
+You need to do the following to use gretlmat in a D program on Ubuntu:
+
+- Include src.d as a source file. The easiest way to do that is to copy src.d to the project directory and add src.d in the compilation step.
+- Tell the linker about libgretl-1.0.so.
+
+Assuming you're compiling a file named foo.d and you've copied src.d into the project directory, compilation with DMD on Ubuntu is done like this:
+
+```
+dmd foo.d src.d -L-lgretl-1.0
+```
+
+# Compiling in Release Mode
+
+There are lots of assert statements scattered throughout the gretlmat library. If you compile in release mode, they're removed in the name of speed. Notably, there are bounds checks on any indexed accesses to the elements of a DoubleMatrix. Negative index values and index values that exceed the length of that dimension will throw an exception. Once your application is fully tested, there's no reason to include all those checks, and as such you should normally compile in release mode for long-running programs.
+
 # DoubleMatrix
 
-This is the matrix struct that is the centerpiece of gretlmat.
+The DoubleMatrix struct is the primary data structure of gretlmat.
 
 ## Public Members
 
@@ -107,7 +128,7 @@ auto m = DoubleMatrix(v); // m is (3x1)
 
 You can copy the contents of one `DoubleMatrix` into another with simple assignment.
 
-*Warning: This can be used to reshape a matrix. Elements are always filled by column, so assigning a (2x2) matrix to a (4x1) matrix is the same as stacking the first column on top of the second column. Use `dup` if you want to guarantee dimensions match.*
+**Warning:** *This can be used to reshape a matrix. Elements are always filled by column, so assigning a (2x2) matrix to a (4x1) matrix is the same as stacking the first column on top of the second column. Use `dup` if you want to guarantee dimensions match.*
 
 Example:
 
