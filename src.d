@@ -183,7 +183,7 @@ struct DoubleMatrix {
 		this.data[] = m.data[];
   }
   
-  // Safe (non-mutating) approach to changing dimensions
+  // Safe (non-mutating) approaches to changing dimensions
   DoubleMatrix reshape(int newrows, int newcols=1) {
     auto result = DoubleMatrix(newrows, newcols);
     assert(result.length == this.length, "Wrong number of elements in call to reshape");
