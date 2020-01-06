@@ -172,3 +172,57 @@ DoubleMatrix m2 = m.setColumns(10);
 DoubleMatrix m2 = m.setRows(20);
 ```
 
+# Submatrix
+
+In some cases, you want to work with only part of a matrix. Suppose you have a $left(6 \times 6\right)$ matrix $M$. You can take advantage of D's *multidimensional slicing* in this case. To take the sum of the upper left $\left(3 \times 3\right)$ block and the lower right $\left(3 \times 3\right)$ block, you can do
+
+```
+Submatrix ul = M[0..3, 0..3];
+Submatrix lr = M[3..6, 3..6];
+DoubleMatrix sm = ul + lr;
+```
+
+There are two advantages of the Submatrix struct.
+
+- It provides convenient notation to refer to part of a matrix.
+- It requires less copying. `ul` and `lr` do not create new $\left(3 \times 3\right)$ matrices and copy the elements into them. A Submatrix holds information about the elements of the original matrix and the location of the matrix in memory. It doesn't know or care about the values of the underlying matrix elements. There's no need to know the elements of `ul` or `lr` in order to do the addition that determines `sm`. This might be more efficient for a large matrix. If `M` had a dimension of $\left(1000 \times 1000\right)$, and you were adding $\left(999 \times 999\right)$ submatrices a million times, the cost of copying would add up.
+
+**Warning:** The Submatrix struct holds only a reference to the underlying DoubleMatrix. If the underlying DoubleMatrix is deleted or changed, you might not get the expected result from the Submatrix. If you want to keep a Submatrix around for a long time, it's best to use the `.dup` method to create a new DoubleMatrix and copy in the corresponding elements of the underlying matrix.
+
+## .dup
+
+You can convert a Submatrix into a new DoubleMatrix, copying in the elements, using the `.dup` method. For the above example:
+
+```
+Submatrix ul = M[0..3, 0..3];
+DoubleMatrix ul2 = ul.dup;
+Submatrix lr = M[3..6, 3..6];
+DoubleMatrix lr2 = lr.dup;
+DoubleMatrix sm = ul2 + lr2;
+```
+
+## alias this
+
+The Submatrix struct aliases to a DoubleMatrix. That means that if you call a function taking a DoubleMatrix argument (and there's no overload taking a Submatrix), the Submatrix will be convert automatically to a DoubleMatrix. For the above example:
+
+```
+Submatrix ul = M[0..3, 0..3];
+DoubleMatrix ch = chol(ul);
+```
+
+Since the `chol` function is defined for a DoubleMatrix but not a Submatrix, `ul` is converted to a DoubleMatrix and a Choleski decomposition is taken of the DoubleMatrix.
+
+## What you need to know about the Submatrix struct
+
+The user of the gretlmat library will generally not need to know anything about how a Submatrix works, or even that it exists at all. It may be necessary to understand the Submatrix struct if you want to extend the library.
+
+## opAssign
+
+The Submatrix struct allows you to copy various things into part of a matrix. Continuing on with the example above:
+
+```
+// M2 is a 3x3 DoubleMatrix
+M[3..6, 3..6] = M2; // Assign a DoubleMatrix
+M[3..6, 0..3] = M[0..3, 3..6]; // Assign a Submatrix
+M[0..3, 3..6] = 4.5; // Assign a scalar
+```

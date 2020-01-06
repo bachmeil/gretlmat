@@ -490,18 +490,6 @@ struct Submatrix {
 		}
 		return result;
 	}
-  
-	version(r) {
-		RMatrix rmat() {
-			auto result = RMatrix(subRows, subCols);
-			foreach(col; 0..subCols) {
-				foreach(row; 0..subRows) {
-					result[row, col] = this[row, col];
-				}
-			}
-			return result;
-		}
-	}   
 }
 
 DoubleMatrix SubmatrixAddition(Submatrix x, Submatrix y) {
