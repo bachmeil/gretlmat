@@ -541,6 +541,18 @@ struct Element {
 	double val;
 	int row;
 	int col;
+	
+	this(double _val, int _row, int _col) {
+		val = _val;
+		row = _row;
+		col = _col;
+	}
+	
+	this(double _val, int[2] ind) {
+		val = _val;
+		row = ind[0];
+		col = ind[1];
+	}
 }
 
 alias Elements = Element[];
@@ -614,6 +626,8 @@ struct BelowDiagonal {
 		}
 	}
 	
+	void opAssign(AboveDiagonal ad) {}
+	
 	// Since we know the previous element's index, use that information
 	// to calculate the next index
 	int[2] nextIndex(int[2] ind) {
@@ -641,7 +655,106 @@ struct BelowDiagonal {
 	}
 }
 
-struct AboveDiagonal {}
+// Should probably do something about the code duplication with BelowDiagonal
+// Not going to worry about it right now
+struct AboveDiagonal {
+	DoubleMatrix m;
+	alias elements this;
+	
+	invariant {
+		assert(m.rows == m.cols, "AboveDiagonal is only defined for square matrices. "
+			~ "If you want the main diagonal, use a Submatrix.");
+	}
+	
+	Elements elements() {
+		Elements result;
+		int[2] ind = [0, 1];
+		foreach(ii; 0..this.length) {
+			result ~= Element(m[ind], ind);
+			ind = nextIndex(ind);
+		}
+		return result;
+	}
+	
+	// Since we know the previous element's index, use that information
+	// to calculate the next index
+	int[2] nextIndex(int[2] ind) {
+		int rowNumber = ind[0];
+		int colNumber = ind[1];
+		if (rowNumber >= colNumber) {
+			return [0, colNumber+1];
+		} else {
+			return [rowNumber+1, colNumber];
+		}
+	}
+
+	DoubleMatrix mat() {
+		auto result = DoubleMatrix(m.rows, m.cols);
+		foreach(col; 0..m.cols) {
+			foreach(row; 0..m.rows) {
+				if (row < col) {
+					result[row, col] = m[row, col];
+				} else {
+					result[row, col] = 0.0;
+				}
+			}
+		}
+		return result;
+	}
+	
+	double[] array() {
+		double[] result;
+		int[2] ind = [0, 1];
+		foreach(ii; 0..this.length) {
+			result ~= this[ind];
+			ind = nextIndex(ind);
+		}
+		return result;
+	}
+	
+	
+	// Don't try to call this. It's confusing to index this struct!
+	private double opIndex(int[2] ind) {
+		return m[ind];
+	}
+	
+	// Don't try to call this either.
+	private void opIndexAssign(double val, int[2] ind) {
+		m[ind] = val;
+	}
+
+	void opAssign(Elements es) {
+		assert(this.length == es.length, "Number of elements doesn't match in assignment involving AboveDiagonal");
+		foreach(e; es) {
+			m[e.row, e.col] = e.val;
+		}
+	}
+	
+	void opAssign(AboveDiagonal ad) {
+		assert(this.length == ad.length, "Cannot do AboveDiagonal assignment unless dimensions match");
+		int[2] ind = [0,1];
+		foreach(ii; 0..ad.length) {
+			m[ind] = ad[ind];
+			ind = nextIndex(ind);
+		}
+	}
+	
+	void opAssign(BelowDiagonal bd) {}
+	
+	// For filling with random elements
+	void fill(double[] v) {
+		assert(this.length == v.length, "Number of elements doesn't match in assignment involving AboveDiagonal");
+		int[2] ind = [0,1];
+		foreach(ii; 0..v.length) {
+			m[ind] = v[ii];
+			ind = nextIndex(ind);
+		}
+	}
+	
+	int length() {
+		return (m.rows^^2 - m.rows)/2;
+	}
+}
 
 struct Diagonal {}
 
