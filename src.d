@@ -1,5 +1,5 @@
 module gretlmat.base;
-import std.conv, std.exception, std.stdio;
+import std.conv, std.exception, std.range, std.stdio;
 
 extern(C) {
   int gretl_matrix_multiply(const GretlMatrix * a, const GretlMatrix * b, GretlMatrix * c);
@@ -138,14 +138,18 @@ struct DoubleMatrix {
 		return data.length.to!int;
 	}
 	
+	int index(int r, int c) {
+		return c*this.rows + r;
+	}
+	
 	// Find element number associated with index
 	// Include all asserts in here
   // These are stripped out in release mode
 	int elt(int r, int c) {
 		assert(r >= 0, "Cannot have a negative row index");
 		assert(c >= 0, "Cannot have a positive row index");
-		assert(r < this.rows, "First index exceeds the number of rows");
-		assert(c < this.cols, "Second index exceeds the number of columns");
+		assert(r < this.rows, "First index (" ~ r.to!string ~ ") exceeds the number of rows");
+		assert(c < this.cols, "Second index (" ~ c.to!string ~ ") exceeds the number of columns");
 		return c*this.rows + r;
 	}
 
@@ -178,6 +182,10 @@ struct DoubleMatrix {
     ptr[elt(r, c)] = v;
   }
   
+  void opIndexAssign(double v, int[2] ind) {
+		opIndexAssign(v, ind[0], ind[1]);
+	}
+  
   void opIndexAssign(T1, T2)(double v, T1 r, T2 c) {
 		ptr[elt(r.to!int, c.to!int)] = v;
 	}
@@ -187,6 +195,24 @@ struct DoubleMatrix {
 		this.data[] = m.data[];
   }
   
+  void fill(double[] v) {
+		assert(this.data.length == v.length, "Argument to fill has length different from the number of elements in the matrix");
+		this.data[] = v[];
+	}
+	
+	void fillByColumn(double[] v) {
+		fill(v);
+	}
+  
+	void fillByRow(double[] v) {
+		assert(this.data.length == v.length, "Argument to fill has length different from the number of elements in the matrix");
+		foreach(row; 0..rows) {
+			foreach(col; 0..cols) {
+				this[row, col] = v[index(col, row)];
+			}
+		}				
+	}
+	
   // Safe (non-mutating) approaches to changing dimensions
   DoubleMatrix reshape(int newrows, int newcols=1) {
     auto result = DoubleMatrix(newrows, newcols);
@@ -507,7 +533,181 @@ DoubleMatrix SubmatrixAddition(Submatrix x, Submatrix y) {
   }
   return result;
 }
+
+struct All {};
+All _;
+
+struct Element {
+	double val;
+	int row;
+	int col;
+}
+
+alias Elements = Element[];
+
+struct BelowDiagonal {
+	DoubleMatrix m;
+	alias elements this;
+	
+	invariant {
+		assert(m.rows == m.cols, "BelowDiagonal is only defined for square matrices. "
+			~ "If you want the main diagonal, use a Submatrix.");
+	}
+	
+	Elements elements() {
+		Elements result;
+		foreach(cc; 0..m.cols) {
+			foreach(rr; cc+1..m.rows) {
+				result ~= Element(m[rr, cc], rr, cc);
+			}
+		}
+		return result;
+	}
+	
+	DoubleMatrix mat() {
+		auto result = DoubleMatrix(m.rows, m.cols);
+		foreach(col; 0..m.cols) {
+			foreach(row; 0..m.rows) {
+				if (row <= col) {
+					result[row, col] = 0.0;
+				} else {
+					result[row, col] = m[row, col];
+				}
+			}
+		}
+		return result;
+	}
+	
+	double[] array() {
+		double[] result;
+		int[2] ind = [1, 0];
+		foreach(ii; 0..this.length) {
+			result ~= this[ind];
+			ind = nextIndex(ind);
+		}
+		return result;
+	}
+	
+	// Don't try to call this. It's confusing to index this struct!
+	private double opIndex(int[2] ind) {
+		return m[ind];
+	}
+	
+	// Don't try to call this either.
+	private void opIndexAssign(double val, int[2] ind) {
+		m[ind] = val;
+	}
+
+	void opAssign(Elements es) {
+		assert(this.length == es.length, "Number of elements doesn't match in assignment involving BelowDiagonal");
+		foreach(e; es) {
+			m[e.row, e.col] = e.val;
+		}
+	}
+	
+	void opAssign(BelowDiagonal bd) {
+		assert(this.length == bd.length, "Cannot do BelowDiagonal assignment unless dimensions match");
+		int[2] ind = [1,0];
+		foreach(ii; 0..bd.length) {
+			m[ind] = bd[ind];
+			ind = nextIndex(ind);
+		}
+	}
+	
+	// Since we know the previous element's index, use that information
+	// to calculate the next index
+	int[2] nextIndex(int[2] ind) {
+		int rowNumber = ind[0];
+		int colNumber = ind[1];
+		if (rowNumber > m.rows-2) {
+			return [colNumber+2, colNumber+1];
+		} else {
+			return [rowNumber+1, colNumber];
+		}
+	}
+
+	// For filling with random elements
+	void fill(double[] v) {
+		assert(this.length == v.length, "Number of elements doesn't match in assignment involving BelowDiagonal");
+		int[2] ind = [1,0];
+		foreach(ii; 0..v.length) {
+			m[ind] = v[ii];
+			ind = nextIndex(ind);
+		}
+	}
+	
+	int length() {
+		return (m.rows^^2 - m.rows)/2;
+	}
+}
+
+struct AboveDiagonal {}
+
+struct Diagonal {}
+
+struct ByIndex {
+	DoubleMatrix mat;
+}
+
+struct ByElement {
+	
+	
+	void opIndexAssign(double[] v) {}
+}
   
+//~ struct ByRow {
+  //~ GretlMatrix mat;
+  //~ int length;
+  //~ private int rowno = 0;
   
+  //~ this(GretlMatrix m) {
+    //~ mat = m;
+    //~ length = m.rows;
+  //~ }
+
+  //~ bool empty() { 
+    //~ return length == 0; 
+  //~ }
   
+  //~ Row front() { 
+    //~ return Row(mat, rowno); 
+  //~ }
+
+  //~ void popFront() {
+    //~ rowno += 1;
+    //~ length -= 1;
+  //~ }
+//~ }
+
+//~ struct ByColumn {
+  //~ GretlMatrix mat;
+  //~ int colno;
+  //~ int length;
+
+  //~ this(GretlMatrix m) {
+		//~ writeln("start of constructor");
+    //~ mat = m;
+    //~ colno = 0;
+    //~ length = m.cols;
+    //~ writeln("exiting constructor");
+  //~ }
+
+  //~ bool empty() { 
+    //~ return length == 0; 
+  //~ }
   
+  //~ Col front() { 
+    //~ return Col(mat, colno); 
+  //~ }
+  
+  //~ void popFront() {
+    //~ colno += 1;
+    //~ length -= 1;
+  //~ }
+//~ }
+
+//~ struct Row {}
+//~ alias Rows = Row[];
+
+//~ struct Col {}
+//~ alias Cols = Col[];
