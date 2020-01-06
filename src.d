@@ -784,7 +784,49 @@ struct AboveDiagonal {
 	}
 }
 
-struct Diagonal {}
+struct Diagonal {
+	DoubleMatrix m;
+	alias array this;
+	
+	invariant {
+		assert(m.rows == m.cols, "Diagonal is only defined for square matrices. "
+			~ "If you want the main diagonal, use a Submatrix.");
+	}
+	
+	double[] array() {
+		double[] result;
+		foreach(ii; 0..m.rows) {
+			result ~= this[ii];
+		}
+		return result;
+	}
+	
+	double opIndex(int ii) {
+		return m[ii, ii];
+	}
+	
+	void opIndexAssign(double val, int ii) {
+		m[ii, ii] = val;
+	}
+	
+	void opAssign(Diagonal d) {
+		assert(this.length == d.length, "Dimensions for Diagonal assignment don't match");
+		foreach(ii; 0..d.length) {
+			this[ii] = d[ii];
+		}
+	}
+	
+	void opAssign(double[] v) {
+		assert(this.length == v.length, "Dimensions for Diagonal assignment don't match");
+		foreach(ii; 0..v.length) {
+			this[ii] = v[ii];
+		}
+	}
+	
+	int length() {
+		return m.cols;
+	}
+}
 
 struct ByIndex {
 	DoubleMatrix mat;
