@@ -226,3 +226,31 @@ M[3..6, 3..6] = M2; // Assign a DoubleMatrix
 M[3..6, 0..3] = M[0..3, 3..6]; // Assign a Submatrix
 M[0..3, 3..6] = 4.5; // Assign a scalar
 ```
+
+# Working with the diagonal
+
+gretlmat includes structs that make it easy to work with the diagonal, elements below the diagonal, and elements above the diagonal. Everything discussed in this section is intended to be used with square matrices. Everything would generalize easily to non-square matrices and the main diagonal, but that's rarely of interest, so you should pull out an appropriate Submatrix of the data that gives you the main diagonal you want to work with.
+
+## BelowDiagonal
+
+The BelowDiagonal struct allows you to perform operations on the part of a square matrix below the diagonal.
+
+### .mat
+
+This method returns a DoubleMatrix with the same dimensions as the original matrix, but with all elements other than those below the diagonal set equal to zero.
+
+### .fill
+
+Given a double[] with the an appropriate number of elements, fill in the elements below the diagonal by column. This is primarily of interest if you want to fill those elements with random values.
+
+### .array
+
+Return a double[] holding the elements as if you stacked the part of the matrix below the diagonal by column.
+
+### opAssign
+
+You can assign the part of a matrix below the diagonal to the same elements in another matrix. Alternatively, you can assign the part of matrix above the diagonal to the part below the diagonal in another matrix. In that case, the row and column indexes are reversed, so that you get a symmetric matrix if you apply that operation to itself.
+
+### .elements
+
+Return an array of Element structs holding the values and indexes of each element below the diagonal.
