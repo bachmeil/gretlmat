@@ -161,6 +161,10 @@ struct DoubleMatrix {
     return data[elt(r.to!int, c.to!int)];
   }
   
+  double opIndex(int[2] ind) {
+		return data[elt(ind[0], ind[1])];
+	}
+  
   // Support for multidimensional indexing
   int[2] opSlice(int dim)(int begin, int end) {
     return [begin, end];
