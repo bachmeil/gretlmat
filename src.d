@@ -605,9 +605,17 @@ struct BelowDiagonal {
 		return m[ind];
 	}
 	
+	private double opIndex(int row, int col) {
+		return m[row, col];
+	}
+	
 	// Don't try to call this either.
 	private void opIndexAssign(double val, int[2] ind) {
 		m[ind] = val;
+	}
+	
+	private void opIndexAssign(double val, int row, int col) {
+		m[row, col] = val;
 	}
 
 	void opAssign(Elements es) {
@@ -626,7 +634,13 @@ struct BelowDiagonal {
 		}
 	}
 	
-	void opAssign(AboveDiagonal ad) {}
+	void opAssign(AboveDiagonal ad) {
+		Elements es = ad.elements;
+		writeln(es);
+		foreach(e; es) {
+			m[e.col, e.row] = ad[e.row, e.col];
+		}
+	}
 	
 	// Since we know the previous element's index, use that information
 	// to calculate the next index
@@ -670,6 +684,7 @@ struct AboveDiagonal {
 		Elements result;
 		int[2] ind = [0, 1];
 		foreach(ii; 0..this.length) {
+			writeln(ind);
 			result ~= Element(m[ind], ind);
 			ind = nextIndex(ind);
 		}
@@ -681,10 +696,10 @@ struct AboveDiagonal {
 	int[2] nextIndex(int[2] ind) {
 		int rowNumber = ind[0];
 		int colNumber = ind[1];
-		if (rowNumber >= colNumber) {
-			return [0, colNumber+1];
-		} else {
+		if (rowNumber < colNumber-1) {
 			return [rowNumber+1, colNumber];
+		} else {
+			return [0, colNumber+1];
 		}
 	}
 
@@ -718,9 +733,17 @@ struct AboveDiagonal {
 		return m[ind];
 	}
 	
+	private double opIndex(int row, int col) {
+		return m[row, col];
+	}
+	
 	// Don't try to call this either.
 	private void opIndexAssign(double val, int[2] ind) {
 		m[ind] = val;
+	}
+	
+	private void opIndexAssign(double val, int row, int col) {
+		m[row, col] = val;
 	}
 
 	void opAssign(Elements es) {
@@ -739,7 +762,12 @@ struct AboveDiagonal {
 		}
 	}
 	
-	void opAssign(BelowDiagonal bd) {}
+	void opAssign(BelowDiagonal bd) {
+		Elements es = bd.elements;
+		foreach(e; es) {
+			m[e.col, e.row] = bd[e.row, e.col];
+		}
+	}
 	
 	// For filling with random elements
 	void fill(double[] v) {

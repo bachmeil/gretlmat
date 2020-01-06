@@ -29,4 +29,16 @@ void main() {
 	m.print("After copying");
 	
 	writeln(BelowDiagonal(m).array);
+
+	// Start over with m and m2
+	m.fill([1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]);
+	m2.fillByRow([1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]);
+	auto ad = AboveDiagonal(m);
+	m.print("Original matrix");
+	BelowDiagonal(m) = AboveDiagonal(m);
+	m.print("I made m symmetric");
+
+	m.fill([1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]);
+	AboveDiagonal(m) = BelowDiagonal(m);
+	m.print("I made m symmetric the other way");
 }
