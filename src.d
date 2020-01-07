@@ -927,21 +927,28 @@ struct Row {
 	
 	// DoubleMatrix mat() {}
 	// alias mat this
-//	double[] array() {}
+
+	double[] array() {
+		double[] result;
+		foreach(val; this) {
+			result ~= val;
+		}
+		return result;
+	}
 
 	/* Only one way to directly create a Row, using Row(m, 4). Can also
 	 * indirectly create a Row using multidimensional slicing of a matrix. */
   this(DoubleMatrix _m, int _row) {
-		assert(r >= 0, "Cannot have a negative row index in Row struct");
-		assert(r < m.rows, "Attempting to create a Row with row number that exceeds matrix dimensions");
+		assert(_row >= 0, "Cannot have a negative row index in Row struct");
+		assert(_row < _m.rows, "Attempting to create a Row with row number that exceeds matrix dimensions");
     m = _m;
     row = _row;
     lastColumn = _m.cols;
   }
   
   this(DoubleMatrix _m, int _row, int _colOffset, int _lastColumn) {
-		assert(r >= 0, "Cannot have a negative row index in Row struct");
-		assert(r < m.rows, "Attempting to create a Row with row number that exceeds matrix dimensions");
+		assert(_row >= 0, "Cannot have a negative row index in Row struct");
+		assert(_row < _m.rows, "Attempting to create a Row with row number that exceeds matrix dimensions");
     m = _m;
     row = _row;
     colOffset = _colOffset;
@@ -952,15 +959,21 @@ struct Row {
    * in order to avoid bugs. Avoid directly indexing mat as much as possible. */
   double opIndex(int ii) {
     assert(ii >= 0, "Index on Row struct can't be negative");
-    assert(ii < this.length, "Index on Row struct out of bounds");
-    return mat[row, ii+colOffset];
+    assert(ii <= this.length, "Index on Row struct out of bounds");
+    return m[row, ii+colOffset];
   }
   
   void opIndexAssign(double val, int ii) {
     assert(ii >= 0, "Index on Row struct can't be negative");
-    assert(ii < this.length, "Index on Row struct out of bounds");
-    mat[row, ii+colOffset] = val;
+    assert(ii <= this.length, "Index on Row struct out of bounds");
+    m[row, ii+colOffset] = val;
   }
+  
+  void opIndexAssign(double val) {
+		foreach(ii; 0..this.length) {
+			this[ii] = val;
+		}
+	}
   
   /* This uses a template. Can copy into a Row anything that is a range,
    * including a double[], another Row, a Col, and a DoubleVector. */
@@ -978,8 +991,35 @@ struct Row {
   // i1 is *not* included, following the D convention
   Row opSlice(int i0, int i1) {
 		assert(i0 >= 0, "Index on Row struct can't be negative");
-    assert(i1 < this.length, "Index on Row struct out of bounds");
+    assert(i1 <= this.length, "Index on Row struct out of bounds");
     return Row(this.m, this.row, this.colOffset+i0, this.colOffset+i1);
+	}
+	
+	int opDollar() {
+		return length();
+	}
+	
+	// Returns the elements of m associated with this Row
+	Elements elements() {
+		Elements result;
+		foreach(ii; colOffset..lastColumn) {
+			result ~= Element(m[row, ii], row, ii);
+		}
+		return result;
+	}
+	
+	// Returns the indexes of m associated with this Row
+	int[2][] indexes() {
+		int[2][] result;
+		foreach(ii; colOffset..lastColumn) {
+			result ~= [row, ii];
+		}
+		return result;
+	}
+	
+	void print(string msg="") {
+		writeln(msg);
+		writeln(this.array);
 	}
 
   bool empty() { return colOffset >= lastColumn; }
@@ -989,88 +1029,108 @@ struct Row {
   }
 }
 
-struct Col {
-  GretlMatrix mat;
-  int col;
-  double * data;
-  int length;
+//~ struct Rows {
+	//~ DoubleMatrix m;
+	//~ int[] rowNumbers;
+	
+	//~ this(DoubleMatrix m, int r) {}
+	//~ this(DoubleMatrix m, int[] rs) {}
+	//~ this(DoubleMatrix m, int start, int end) {}
+	
+	//~ array
+	//~ alias array this;
+	//~ void opAppend(Row)
+	//~ void opAppend(Rows)
+	//~ void opAppend(int)
+	//~ void opAppend(int[])
+	//~ void opAssign(double a)
+	//~ void opAssign(T)(anything with the right length) { all rows set to that value }
+	//~ void opAssign(double[][]) { if right length (both ways), copy in order into these rows }
+	//~ DoubleMatrix mat() { Copy into a DoubleMatrix in order }
+//~ }
 
-  this(GretlMatrix m, int c) {
-    mat = m;
-    col = c;
-    data = &m.ptr[m.rows*c];
-    length = m.rows;
-  }
+//~ struct Col {
+  //~ GretlMatrix mat;
+  //~ int col;
+  //~ double * data;
+  //~ int length;
 
-  double opIndex(int r) {
-    enforce(r < length, "Column index out of bounds");
-    return data[r];
-  }
+  //~ this(GretlMatrix m, int c) {
+    //~ mat = m;
+    //~ col = c;
+    //~ data = &m.ptr[m.rows*c];
+    //~ length = m.rows;
+  //~ }
 
-  void opIndexAssign(double val, int ii) {
-    mat[ii, col] = val;
-  }
+  //~ double opIndex(int r) {
+    //~ enforce(r < length, "Column index out of bounds");
+    //~ return data[r];
+  //~ }
 
-  void opAssign(T)(T v) {
-    enforce(this.length == v.length, "Attempting to copy into Column an object with the wrong number of elements");
-    foreach(ii; 0..to!int(this.length)) {
-      mat[ii, col] = v[ii];
-    }
-  }
+  //~ void opIndexAssign(double val, int ii) {
+    //~ mat[ii, col] = val;
+  //~ }
+
+  //~ void opAssign(T)(T v) {
+    //~ enforce(this.length == v.length, "Attempting to copy into Column an object with the wrong number of elements");
+    //~ foreach(ii; 0..to!int(this.length)) {
+      //~ mat[ii, col] = v[ii];
+    //~ }
+  //~ }
  
-  void opAssign(double x) {
-    foreach(ii; 0..this.length) { 
-      mat[ii, col] = x;
-    }
-  }
+  //~ void opAssign(double x) {
+    //~ foreach(ii; 0..this.length) { 
+      //~ mat[ii, col] = x;
+    //~ }
+  //~ }
 
-  void opAssign(GretlMatrix m) {
-    enforce(length == m.rows, "Wrong number of elements to copy into Column");
-    enforce(m.cols == 1, "Cannot copy into a Column from a matrix with more than one column");
-    foreach(ii; 0..this.length) {
-      mat[ii, col] = m[ii, 0];
-    }
-  }
+  //~ void opAssign(GretlMatrix m) {
+    //~ enforce(length == m.rows, "Wrong number of elements to copy into Column");
+    //~ enforce(m.cols == 1, "Cannot copy into a Column from a matrix with more than one column");
+    //~ foreach(ii; 0..this.length) {
+      //~ mat[ii, col] = m[ii, 0];
+    //~ }
+  //~ }
 
-  double[] opSlice(int i0, int i1) {
-		double[] result;
-		foreach(row; i0..i1) {
-			result ~= this[row];
-		}
-		return result;
-	}
+  //~ double[] opSlice(int i0, int i1) {
+		//~ double[] result;
+		//~ foreach(row; i0..i1) {
+			//~ result ~= this[row];
+		//~ }
+		//~ return result;
+	//~ }
 
-  bool empty() { return length == 0; }
-  double front() { return data[0]; }
-  void popFront() {
-    data = &data[1];
-    length -= 1;
-  }
-}
+  //~ bool empty() { return length == 0; }
+  //~ double front() { return data[0]; }
+  //~ void popFront() {
+    //~ data = &data[1];
+    //~ length -= 1;
+  //~ }
+//~ }
 
-struct ByRow {
-  GretlMatrix mat;
-  int length;
-  private int rowno = 0;
+//~ struct ByRow {
+  //~ GretlMatrix mat;
+  //~ int length;
+  //~ private int rowno = 0;
   
-  this(GretlMatrix m) {
-    mat = m;
-    length = m.rows;
-  }
+  //~ this(GretlMatrix m) {
+    //~ mat = m;
+    //~ length = m.rows;
+  //~ }
 
-  bool empty() { 
-    return length == 0; 
-  }
+  //~ bool empty() { 
+    //~ return length == 0; 
+  //~ }
   
-  Row front() { 
-    return Row(mat, rowno); 
-  }
+  //~ Row front() { 
+    //~ return Row(mat, rowno); 
+  //~ }
 
-  void popFront() {
-    rowno += 1;
-    length -= 1;
-  }
-}
+  //~ void popFront() {
+    //~ rowno += 1;
+    //~ length -= 1;
+  //~ }
+//~ }
   
 //~ struct ByRow {
   //~ GretlMatrix mat;
