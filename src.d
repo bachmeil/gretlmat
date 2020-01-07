@@ -909,6 +909,168 @@ struct ByElement {
 		}
   }
 }
+
+struct Row {
+  /* lastCol is the last column of m included in this row.
+   * It can be less that m.cols.
+   * colOffset is what you use to index the first element of the row. */
+  DoubleMatrix m;
+  int row;
+  private int colOffset = 0;
+  private int lastColumn;
+  
+  /* Use a length function because it's too easy to forget to update
+   * length if it's treated as data. This always gets it right. */
+  int length() {
+		return lastColumn - colOffset;
+	}
+	
+	// DoubleMatrix mat() {}
+	// alias mat this
+//	double[] array() {}
+
+	/* Only one way to directly create a Row, using Row(m, 4). Can also
+	 * indirectly create a Row using multidimensional slicing of a matrix. */
+  this(DoubleMatrix _m, int _row) {
+		assert(r >= 0, "Cannot have a negative row index in Row struct");
+		assert(r < m.rows, "Attempting to create a Row with row number that exceeds matrix dimensions");
+    m = _m;
+    row = _row;
+    lastColumn = _m.cols;
+  }
+  
+  this(DoubleMatrix _m, int _row, int _colOffset, int _lastColumn) {
+		assert(r >= 0, "Cannot have a negative row index in Row struct");
+		assert(r < m.rows, "Attempting to create a Row with row number that exceeds matrix dimensions");
+    m = _m;
+    row = _row;
+    colOffset = _colOffset;
+    lastColumn = _lastColumn;
+  }
+
+  /* Define the index operators here and then use them everywhere else
+   * in order to avoid bugs. Avoid directly indexing mat as much as possible. */
+  double opIndex(int ii) {
+    assert(ii >= 0, "Index on Row struct can't be negative");
+    assert(ii < this.length, "Index on Row struct out of bounds");
+    return mat[row, ii+colOffset];
+  }
+  
+  void opIndexAssign(double val, int ii) {
+    assert(ii >= 0, "Index on Row struct can't be negative");
+    assert(ii < this.length, "Index on Row struct out of bounds");
+    mat[row, ii+colOffset] = val;
+  }
+  
+  /* This uses a template. Can copy into a Row anything that is a range,
+   * including a double[], another Row, a Col, and a DoubleVector. */
+  void opAssign(T)(T v) {
+    assert(this.length == v.length, "Attempting to copy an object with the wrong number of elements into a Row struct");
+    foreach(ii; 0..this.length) {
+      this[ii] = v[ii];
+    }
+  }
+
+  void opAssign(double a) {
+    this[] = a;
+  }
+  
+  // i1 is *not* included, following the D convention
+  Row opSlice(int i0, int i1) {
+		assert(i0 >= 0, "Index on Row struct can't be negative");
+    assert(i1 < this.length, "Index on Row struct out of bounds");
+    return Row(this.m, this.row, this.colOffset+i0, this.colOffset+i1);
+	}
+
+  bool empty() { return colOffset >= lastColumn; }
+  double front() { return this[0]; }
+  void popFront() {
+    colOffset += 1;
+  }
+}
+
+struct Col {
+  GretlMatrix mat;
+  int col;
+  double * data;
+  int length;
+
+  this(GretlMatrix m, int c) {
+    mat = m;
+    col = c;
+    data = &m.ptr[m.rows*c];
+    length = m.rows;
+  }
+
+  double opIndex(int r) {
+    enforce(r < length, "Column index out of bounds");
+    return data[r];
+  }
+
+  void opIndexAssign(double val, int ii) {
+    mat[ii, col] = val;
+  }
+
+  void opAssign(T)(T v) {
+    enforce(this.length == v.length, "Attempting to copy into Column an object with the wrong number of elements");
+    foreach(ii; 0..to!int(this.length)) {
+      mat[ii, col] = v[ii];
+    }
+  }
+ 
+  void opAssign(double x) {
+    foreach(ii; 0..this.length) { 
+      mat[ii, col] = x;
+    }
+  }
+
+  void opAssign(GretlMatrix m) {
+    enforce(length == m.rows, "Wrong number of elements to copy into Column");
+    enforce(m.cols == 1, "Cannot copy into a Column from a matrix with more than one column");
+    foreach(ii; 0..this.length) {
+      mat[ii, col] = m[ii, 0];
+    }
+  }
+
+  double[] opSlice(int i0, int i1) {
+		double[] result;
+		foreach(row; i0..i1) {
+			result ~= this[row];
+		}
+		return result;
+	}
+
+  bool empty() { return length == 0; }
+  double front() { return data[0]; }
+  void popFront() {
+    data = &data[1];
+    length -= 1;
+  }
+}
+
+struct ByRow {
+  GretlMatrix mat;
+  int length;
+  private int rowno = 0;
+  
+  this(GretlMatrix m) {
+    mat = m;
+    length = m.rows;
+  }
+
+  bool empty() { 
+    return length == 0; 
+  }
+  
+  Row front() { 
+    return Row(mat, rowno); 
+  }
+
+  void popFront() {
+    rowno += 1;
+    length -= 1;
+  }
+}
   
 //~ struct ByRow {
   //~ GretlMatrix mat;
