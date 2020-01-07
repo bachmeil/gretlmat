@@ -888,9 +888,26 @@ struct ByIndex {
 }
 
 struct ByElement {
+	DoubleMatrix m;
+	int rr = 0;
+	int cc = 0;
 	
-	
-	void opIndexAssign(double[] v) {}
+  bool empty() {
+    return cc >= m.cols; 
+  }
+  
+  Element front() {
+    return Element(m[rr, cc], rr, cc); 
+  }
+
+  void popFront() {
+		if (rr == m.rows-1) {
+			rr = 0;
+			cc += 1;
+		} else {
+			rr += 1;
+		}
+  }
 }
   
 //~ struct ByRow {

@@ -42,5 +42,25 @@ void main() {
 	AboveDiagonal(m) = BelowDiagonal(m);
 	m.print("I made m symmetric the other way");
 	
-	writeln(ByIndex(m));
+	m.fill([1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]);
+	foreach(ind; ByIndex(m)) {
+		writeln(ind);
+	}
+	
+	foreach(el; ByElement(m)) {
+		writeln(el);
+	}
+	
+	writeln(Diagonal(m).array);
+	Diagonal(m) = [0.5, 0.6, 0.8];
+	m.print("After changing the diagonal");
+	Diagonal(m) = 0.0;
+	m.print("All diagonal elements set to zero");
+	
+	// Double every element using ByElement
+	m.fill([1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9]);
+	foreach(el; ByElement(m)) {
+		m[el.row, el.col] = 2.0*el.val;
+	}
+	m.print("After doubling all the elements");
 }
