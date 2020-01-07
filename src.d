@@ -642,6 +642,8 @@ struct BelowDiagonal {
 		}
 	}
 	
+	void opAssign(double a) {}
+	
 	// Since we know the previous element's index, use that information
 	// to calculate the next index
 	int[2] nextIndex(int[2] ind) {
@@ -769,6 +771,8 @@ struct AboveDiagonal {
 		}
 	}
 	
+	void opAssign(double a) {}
+	
 	// For filling with random elements
 	void fill(double[] v) {
 		assert(this.length == v.length, "Number of elements doesn't match in assignment involving AboveDiagonal");
@@ -801,12 +805,38 @@ struct Diagonal {
 		return result;
 	}
 	
+	DoubleMatrix mat() {
+		auto result = DoubleMatrix(m.rows, m.cols);
+		foreach(ind; ByIndex(m)) {
+			if (ind[0] == ind[1]) {
+				result[ind] = m[ind];
+			} else {
+				result[ind] = 0.0;
+			}
+		}
+		return result;
+	}
+	
 	double opIndex(int ii) {
+		assert(ii >= 0, "Index on Diagonal cannot be negative");
+		assert(ii < m.cols, "Index on Diagonal exceeds dimension");
 		return m[ii, ii];
 	}
 	
+	double opIndex(int[2] ind) {
+		assert(ind[0] == ind[1], "Index values not the same for an element on the diagonal");
+		return opIndex(ind[0]);
+	}
+	
 	void opIndexAssign(double val, int ii) {
+		assert(ii >= 0, "Index on Diagonal cannot be negative");
+		assert(ii < m.cols, "Index on Diagonal exceeds dimension");
 		m[ii, ii] = val;
+	}
+	
+	void opIndexAssign(double val, int[2] ind) {
+		assert(ind[0] == ind[1], "Index values not the same for an element on the diagonal");
+		return opIndexAssign(val, ind[0]);
 	}
 	
 	void opAssign(Diagonal d) {
@@ -818,8 +848,14 @@ struct Diagonal {
 	
 	void opAssign(double[] v) {
 		assert(this.length == v.length, "Dimensions for Diagonal assignment don't match");
-		foreach(ii; 0..v.length) {
+		foreach(ii; 0..this.length) {
 			this[ii] = v[ii];
+		}
+	}
+	
+	void opAssign(double a) {
+		foreach(ii; 0..this.length) {
+			this[ii] = a;
 		}
 	}
 	
@@ -829,7 +865,26 @@ struct Diagonal {
 }
 
 struct ByIndex {
-	DoubleMatrix mat;
+	DoubleMatrix m;
+	int rr = 0;
+	int cc = 0;
+	
+  bool empty() {
+    return cc >= m.cols; 
+  }
+  
+  int[2] front() {
+    return [rr, cc]; 
+  }
+
+  void popFront() {
+		if (rr == m.rows-1) {
+			rr = 0;
+			cc += 1;
+		} else {
+			rr += 1;
+		}
+  }
 }
 
 struct ByElement {
