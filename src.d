@@ -1029,6 +1029,78 @@ struct Row {
   }
 }
 
+struct MatrixElements {
+	int[2][] indexes;
+	DoubleMatrix m;
+	
+	// nextIndex calculates the next index value, and may not be valid
+	// done returns true if the next index value is out of range
+	this(DoubleMatrix _m, int[2] ind,
+		int[2] function(DoubleMatrix dm, int[2] currentIndex) nextIndex,
+		bool function(DoubleMatrix dm, int[2] currentIndex) done) {
+			m = _m;
+			bool d = false;
+			while (!d) {
+				indexes ~= ind;
+				ind = nextIndex(m, ind);
+				d = done(m, ind);
+			}
+	}
+	
+	double opIndex(int ii) {
+		assert(ii >= 0, "Index on MatrixElements cannot be negative");
+		assert(ii < indexes.length, "Index on MatrixElements exceeds the dimension");
+		return m[indexes[ii]];
+	}
+	
+	void opIndexAssign(double val, int ii) {
+		assert(ii >= 0, "Index on MatrixElements cannot be negative");
+		assert(ii < indexes.length, "Index on MatrixElements exceeds the dimension");
+		m[indexes[ii]] = val;
+	}
+	
+	void opAssign(double a) {
+		foreach(ind; indexes) {
+			m[ind] = a;
+		}
+	}
+	
+	void opAssign(T)(T v) {
+		assert(inds.length == v.length, "Assigning to a MatrixElements struct with wrong number of elements");
+		foreach(ii; 0..indexes.length) {
+			this[ii] = v[ii];
+		}
+	}
+	
+	Elements elements() {
+		Elements result;
+		foreach(ind; indexes) {
+			result ~= Element(m[ind], ind);
+		}
+		return result;
+	}
+	
+	void print(string msg="") {
+		if (msg != "") {
+			writeln(msg);
+		}
+		foreach(ind; indexes) {
+			writeln(ind, ": ", m[ind]);
+		}
+	}
+	
+	int opDollar() {
+		return indexes.length.to!int;
+	}
+	
+	bool empty() { return indexes.length <= 0; }
+  Element front() { return Element(m[indexes[0]], indexes[0]); }
+  void popFront() {
+    indexes = dropOne(indexes);
+  }
+}
+				
+
 //~ struct Rows {
 	//~ DoubleMatrix m;
 	//~ int[] rowNumbers;
