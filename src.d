@@ -1030,8 +1030,8 @@ struct Row {
 }
 
 struct MatrixElements {
-	int[2][] indexes;
 	DoubleMatrix m;
+	int[2][] indexes;
 	
 	// nextIndex calculates the next index value, and may not be valid
 	// done returns true if the next index value is out of range
@@ -1045,6 +1045,23 @@ struct MatrixElements {
 				ind = nextIndex(m, ind);
 				d = done(m, ind);
 			}
+	}
+	
+	this(DoubleMatrix _m, int[2] ind,
+		int[2] delegate(DoubleMatrix dm, int[2] currentIndex) nextIndex,
+		bool delegate(DoubleMatrix dm, int[2] currentIndex) done) {
+			m = _m;
+			bool d = false;
+			while (!d) {
+				indexes ~= ind;
+				ind = nextIndex(m, ind);
+				d = done(m, ind);
+			}
+	}
+
+	this(DoubleMatrix _m, int[2][] _indexes) {
+		m = _m;
+		indexes = _indexes;
 	}
 	
 	double opIndex(int ii) {
@@ -1066,8 +1083,8 @@ struct MatrixElements {
 	}
 	
 	void opAssign(T)(T v) {
-		assert(inds.length == v.length, "Assigning to a MatrixElements struct with wrong number of elements");
-		foreach(ii; 0..indexes.length) {
+		assert(indexes.length == v.length, "Assigning to a MatrixElements struct with wrong number of elements");
+		foreach(ii; 0..indexes.length.to!int) {
 			this[ii] = v[ii];
 		}
 	}
