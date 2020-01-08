@@ -1126,26 +1126,81 @@ struct MatrixElements {
   }
 }
 				
+struct Rows {
+	DoubleMatrix m;
+	int[] rowNumbers;
+	alias mat this;
+	
+	this(DoubleMatrix _m, int r) {
+		m = _m;
+		rowNumbers = [r];
+	}
+	
+	this(DoubleMatrix _m, int rs) {
+		m = _m;
+		rowNumbers = rs;
+	}
+	
+	// e is *not* included
+	this(DoubleMatrix _m, int s, int e) {
+		 m = _m;
+		 foreach(ii; s..e) {
+			 rowNumbers ~= ii;
+		 }
+	 }
 
-//~ struct Rows {
-	//~ DoubleMatrix m;
-	//~ int[] rowNumbers;
+	DoubleMatrix mat() {
+		auto result = DoubleMatrix(rowNumbers.length, m.cols);
+		foreach(ii; 0..rowNumbers.length) {
+			Row(result, ii) = Row(m, rowNumbers[ii]);
+		}
+		return result;
+	}
+
+	void opOpAssign(string op)(int r) {
+		static if(op == "~") {
+			rowNumbers ~= r;
+		}
+	}
 	
-	//~ this(DoubleMatrix m, int r) {}
-	//~ this(DoubleMatrix m, int[] rs) {}
-	//~ this(DoubleMatrix m, int start, int end) {}
+	void opOpAssign(string op)(int[] rs) {
+		static if(op == "~") {
+			rowNumbers ~= rs;
+		}
+	}
 	
-	//~ array
-	//~ alias array this;
-	//~ void opAppend(Row)
-	//~ void opAppend(Rows)
-	//~ void opAppend(int)
-	//~ void opAppend(int[])
-	//~ void opAssign(double a)
-	//~ void opAssign(T)(anything with the right length) { all rows set to that value }
-	//~ void opAssign(double[][]) { if right length (both ways), copy in order into these rows }
-	//~ DoubleMatrix mat() { Copy into a DoubleMatrix in order }
-//~ }
+	void opAssign(double a) {
+		foreach(ii; rowNumbers) {
+			Row(m, ii) = a;
+		}
+	}
+	
+	void opAssign(T)(T v) {
+		assert(m.cols == v.length, "Dimensions don't match in call to opAssign(T) on Rows");
+		foreach(ii; rowNumbers) {
+			Row(m, ii) = v;
+		}
+	}
+	
+	void opAssign(double[][] rs) {
+		assert(rowNumbers.length == rs.length, "Wrong number of elements in opAssign(double[][])");
+		foreach(ii; 0..rowNumbers.length) {
+			Row(m, ii) = rs[ii];
+		}
+	}
+
+	bool empty() {
+		return rowNumbers.length == 0;
+	}
+	
+	Row front() {
+		return Row(m, rowNumbers[ii]);
+	}
+	
+	void popFront() {
+		rowNumbers = dropOne(rowNumbers);
+	}
+}
 
 //~ struct Col {
   //~ GretlMatrix mat;
