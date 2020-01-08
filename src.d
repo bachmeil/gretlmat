@@ -1110,6 +1110,15 @@ struct MatrixElements {
 		return indexes.length.to!int;
 	}
 	
+	DoubleMatrix mat() {
+		DoubleMatrix result;
+		result = 0.0;
+		foreach(ind; indexes) {
+			result[ind] = m[ind];
+		}
+		return result;
+	}
+	
 	bool empty() { return indexes.length <= 0; }
   Element front() { return Element(m[indexes[0]], indexes[0]); }
   void popFront() {
