@@ -177,6 +177,14 @@ struct DoubleMatrix {
   Submatrix opIndex(int[2] rr, int[2] cc) {
     return Submatrix(this, rr[0], cc[0], rr[1], cc[1]);
   }
+  
+  Col opIndex(AllElements tmp, int c) {
+		return Col(this, c);
+	}
+	
+	Row opIndex(int r, AllElements tmp) {
+		return Row(this, r);
+	}
 
   void opIndexAssign(double v, int r, int c) {
     ptr[elt(r, c)] = v;
@@ -295,6 +303,10 @@ struct DoubleMatrix {
 		return result;
 	}
 }
+
+/* This is used to specify all of the elements in a row or column. */
+struct AllElements {}
+AllElements _all;
 
 DoubleMatrix dup(DoubleMatrix m) {
   auto result = DoubleMatrix(m.rows, m.cols);
@@ -601,6 +613,7 @@ struct BelowDiagonal {
 	}
 	
 	// Don't try to call this. It's confusing to index this struct!
+	// m[[2,4]]
 	private double opIndex(int[2] ind) {
 		return m[ind];
 	}
@@ -1336,8 +1349,8 @@ struct Rows {
   //~ }
 //~ }
 
-//~ struct Row {}
+struct Row {}
 //~ alias Rows = Row[];
 
-//~ struct Col {}
+struct Col {}
 //~ alias Cols = Col[];
