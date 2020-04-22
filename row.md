@@ -1,4 +1,4 @@
-# Working at the level of rows
+# Working at the level of one row
 
 It's common to work with one or more rows rather than a full matrix. The Row struct is the foundation for working at this level.
 
@@ -55,9 +55,18 @@ Row(x, 0) = Row(x, 1)
 
 ## Slicing
 
-You can slice a Row
+You can slice a Row and assign to a slice of a Row:
 
-Assign to a slice?
+```
+auto r3 = Row(x, 3);
+Row r31 = r3[1..$];
+auto r4 = Row(x, 4);
+Row r41 = r4[1..$];
+r31[1..4] = r41[2..5];
+r41 = 5.2;
+```
+
+A slice of a Row is itself a Row. One implication is that `r31[0..1]` is not the same as `r31[0]`. The latter is a double, while the former is a Row.
 
 ## A Row is a range
 
@@ -67,9 +76,21 @@ You can iterate over a Row the same as a `double[]`: `foreach(val; Row(x, 4))`.
 
 You can use the dollar sign as you would for a `double[]`: `Row(x, 2)[4..$]`.
 
-## Elements
+## elements
+
+If you want to iterate over all the elements of a Row, you can call `elements`:
+
+```
+Elements es = Row(x, 3).elements();
+```
 
 ## indexes
+
+If you want to iterate over the indexes of all the elements of a Row, you can call `indexes`:
+
+```
+int[2][] inds = Row(x, 3).indexes();
+```
 
 # FillByRow
 
