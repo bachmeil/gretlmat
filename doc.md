@@ -269,38 +269,3 @@ You can assign the part of a matrix below the diagonal to the same elements in a
 
 Return an array of Element structs holding the values and indexes of each element below the diagonal.
 
-# FillByRow
-
-This is a utility function for constructing a matrix out of individual Row structs. You allocate a FillByRow struct as you would a DoubleMatrix:
-
-```
-auto x = FillByRow(10, 6);
-```
-
-`x` is a (10x6) DoubleMatrix that can filled row by row. If `v` is a Row, you add it to the next unfilled row by calling `put`:
-
-```
-x.put(v);
-```
-
-Two asserts are checked:
-
-- That there is another empty row that you can fill.
-- That the you're trying to add a Row with the right number of columns.
-
-In the future, you will be able to call `put` with the following argument types:
-
-- Rows
-- Col
-- Cols
-- double
-- double[]
-- DoubleMatrix
-
-FillByRow aliases to a DoubleMatrix, but if you want to explicitly return the underlying matrix, you can call .mat directly:
-
-```
-x.mat
-```
-
-.mat is a field, not a method, so don't use parenthesis.

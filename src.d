@@ -936,23 +936,6 @@ struct Row {
   private int colOffset = 0;
   private int lastColumn;
   
-  /* Use a length function because it's too easy to forget to update
-   * length if it's treated as data. This always gets it right. */
-  int length() {
-		return lastColumn - colOffset;
-	}
-	
-	// DoubleMatrix mat() {}
-	// alias mat this
-
-	double[] array() {
-		double[] result;
-		foreach(val; this) {
-			result ~= val;
-		}
-		return result;
-	}
-
 	/* Only one way to directly create a Row, using Row(m, 4). Can also
 	 * indirectly create a Row using multidimensional slicing of a matrix. */
   this(DoubleMatrix _m, int _row) {
@@ -971,6 +954,39 @@ struct Row {
     colOffset = _colOffset;
     lastColumn = _lastColumn;
   }
+
+  /* Use a length function because it's too easy to forget to update
+   * length if it's treated as data. This always gets it right. */
+  int length() {
+		return lastColumn - colOffset;
+	}
+	
+	// DoubleMatrix mat() {}
+	// alias mat this
+
+	double[] array() {
+		double[] result;
+		foreach(val; this) {
+			result ~= val;
+		}
+		return result;
+	}
+	
+	DoubleMatrix dup() {
+		auto result = DoubleMatrix(1, this.length);
+		Row(result, 0) = this;
+		return result;
+	}
+	
+	DoubleMatrix rowmat() {
+		return this.dup;
+	}
+	
+	//~ DoubleMatrix colmat() {
+		//~ auto result = DoubleMatrix(this.length, 1);
+		//~ Col(result, 0) = this;
+		//~ return result;
+	//~ }
 
   /* Define the index operators here and then use them everywhere else
    * in order to avoid bugs. Avoid directly indexing mat as much as possible. */
@@ -1001,10 +1017,6 @@ struct Row {
     }
   }
 
-  void opAssign(double a) {
-    this[] = a;
-  }
-  
   // i1 is *not* included, following the D convention
   Row opSlice(int i0, int i1) {
 		assert(i0 >= 0, "Index on Row struct can't be negative");
