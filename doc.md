@@ -8,7 +8,7 @@ gretlmat targets **beginners to the D programming language**. When there's a con
 
 # OS support
 
-At this time, gretlmat only supports Linux, so it's limited to Linux and Windows with WSL.
+At this time, gretlmat supports only Linux (and thus Windows with WSL).
 
 There is no reason it can't be used on Mac or natively on Windows. All you have to do is link to libgretl. That shouldn't take much on a Mac, but it'll require creating an import library for libgretl on Windows.
 
