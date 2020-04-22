@@ -10,13 +10,13 @@ gretlmat targets **beginners to the D programming language**. When there's a con
 
 At this time, gretlmat supports only Linux (and thus Windows with WSL).
 
-There is no reason it can't be used on Mac or natively on Windows. All you have to do is link to libgretl. That shouldn't take much on a Mac, but it'll require creating an import library for libgretl on Windows.
+There is no reason it can't be used on Mac or natively on Windows. All you have to do is link to libgretl. That shouldn't take much on a Mac - and most likely works out of the box by adding the correct linker command when compiling - but you'll need to create an import library for libgretl on Windows.
 
-My time is limited. I'd rather spend it finishing the library for my own use. Let me know if you're willing to volunteer to support native Windows or Mac users.
+I plan to spend my limited time finishing the library for use in my own projects. Let me know if you're willing to volunteer to support native Windows or Mac users.
 
-# Installation (Ubuntu)
+# Installation
 
-The only dependency is libgretl. On Ubuntu, this is satisfied by installing the package `libgretl1-dev`.
+The only dependency is libgretl. On Ubuntu, this is satisfied by installing the package `libgretl1-dev`. If you're installing on another Linux, be sure you install the development 
 
 # Usage (Ubuntu)
 
