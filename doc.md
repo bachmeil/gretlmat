@@ -2,13 +2,17 @@
 
 gretlmat is a D wrapper over the matrix functionality in [Gretl](http://gretl.sourceforge.net/). Gretl is written in C and provides a simple interface to BLAS and LAPACK.
 
-The goal of this project is to make it **as easy as possible to add matrix support to an existing D program**. It should be easy to use the gretlmat library, but it should also be easy to modify it for your needs. You only need to add one .d source file to your project and link to libgretl. 
+The goal of this project is to make it **as easy as possible to add matrix support to an existing D program**. It should be easy to use the gretlmat library and easy to modify the library for your needs. The full library is a single .d source file and the only dependency is libgretl. 
 
-gretlmat targets **beginners to the D programming language**. When performance and ease of use are in conflict, I always go for ease of use. Note that the underlying matrix calculations are handled by the underlying BLAS and LAPACK libraries called by Gretl, which is where your program will spend most of its time.
+gretlmat targets **beginners to the D programming language**. When there's a conflict between performance and ease of use, I go for ease of use. Since the underlying matrix operations are handled by calling BLAS and LAPACK, the performance of your program is mostly dependent on having a good BLAS and LAPACK, not the wrapper that sits on top of it.
 
 # OS support
 
-At this time, gretlmat only supports Linux, which means it's limited to Linux and WSL for Windows users.  It shouldn't take much to get it working natively on Windows or on Mac. The only issue is that I don't have time to support OSes I don't use. Finishing the library is a better use of my time.
+At this time, gretlmat only supports Linux, so it's limited to Linux and Windows with WSL.
+
+There is no reason it can't be used on Mac or natively on Windows. All you have to do is link to libgretl. That shouldn't take much on a Mac, but it'll require creating an import library for libgretl on Windows.
+
+My time is limited. I'd rather spend it finishing the library for my own use. Let me know if you're willing to volunteer to support native Windows or Mac users.
 
 # Installation (Ubuntu)
 
