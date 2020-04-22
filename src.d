@@ -178,9 +178,9 @@ struct DoubleMatrix {
     return Submatrix(this, rr[0], cc[0], rr[1], cc[1]);
   }
   
-  Col opIndex(AllElements tmp, int c) {
-		return Col(this, c);
-	}
+  //~ Col opIndex(AllElements tmp, int c) {
+		//~ return Col(this, c);
+	//~ }
 	
 	Row opIndex(int r, AllElements tmp) {
 		return Row(this, r);
@@ -202,6 +202,10 @@ struct DoubleMatrix {
     assert(this.data.length == m.data.length, "Dimensions do not match for matrix assignment");
 		this.data[] = m.data[];
   }
+  
+  void opAssign(double a) {
+		this.data[] = a;
+	}
   
   void fill(double[] v) {
 		assert(this.data.length == v.length, "Argument to fill has length different from the number of elements in the matrix");
@@ -924,7 +928,7 @@ struct ByElement {
 }
 
 struct Row {
-  /* lastCol is the last column of m included in this row.
+  /* lastColumn is the last column of m included in this row.
    * It can be less that m.cols.
    * colOffset is what you use to index the first element of the row. */
   DoubleMatrix m;
@@ -1138,6 +1142,65 @@ struct MatrixElements {
     indexes = dropOne(indexes);
   }
 }
+
+struct FillByRow {
+	DoubleMatrix mat;
+	int fillPointer = 0;
+	alias mat this;
+	
+	this(int r, int c=1) {
+		mat = DoubleMatrix(r, c);
+	}
+	
+	void put(Row rr) {
+		assert(mat.rows > fillPointer, "In call to put: FillByRow struct is already full. The matrix was initialized with only " ~ mat.rows.to!string ~ " rows.");
+		assert(rr.length == mat.cols, "In call to put: FillByRow struct has " ~ mat.cols.to!string ~ " columns, but you're trying to add a Row with " ~ rr.m.cols.to!string ~ " columns. Are you attempting put with a slice of a Row?");
+		Row(mat, fillPointer) = rr;
+		fillPointer += 1;
+	}
+
+	//~ void put(Rows rr) {
+		//~ assert(mat.rows > fillPointer, "In call to put: FillByRow struct is already full. The matrix was initialized with only " ~ m.rows ~ " rows.");
+		//~ assert(rr.m.cols == mat.cols, "In call to put: FillByRow struct has " ~ m.cols ~ " columns, but you're trying to add a Row with " ~ rr.m.cols ~ " columns.");
+		//~ Row(mat, fillPointer) = rr;
+		//~ fillPointer += 1;
+	//~ }
+	
+	//~ void put(Col rr) {
+		//~ assert(mat.rows > fillPointer, "In call to put: FillByRow struct is already full. The matrix was initialized with only " ~ m.rows ~ " rows.");
+		//~ assert(rr.m.cols == mat.cols, "In call to put: FillByRow struct has " ~ m.cols ~ " columns, but you're trying to add a Row with " ~ rr.m.cols ~ " columns.");
+		//~ Row(mat, fillPointer) = rr;
+		//~ fillPointer += 1;
+	//~ }
+
+	//~ void put(Cols rr) {
+		//~ assert(mat.rows > fillPointer, "In call to put: FillByRow struct is already full. The matrix was initialized with only " ~ m.rows ~ " rows.");
+		//~ assert(rr.m.cols == mat.cols, "In call to put: FillByRow struct has " ~ m.cols ~ " columns, but you're trying to add a Row with " ~ rr.m.cols ~ " columns.");
+		//~ Row(mat, fillPointer) = rr;
+		//~ fillPointer += 1;
+	//~ }
+
+	//~ void put(double rr) {
+		//~ assert(mat.rows > fillPointer, "In call to put: FillByRow struct is already full. The matrix was initialized with only " ~ m.rows ~ " rows.");
+		//~ assert(rr.m.cols == mat.cols, "In call to put: FillByRow struct has " ~ m.cols ~ " columns, but you're trying to add a Row with " ~ rr.m.cols ~ " columns.");
+		//~ Row(mat, fillPointer) = rr;
+		//~ fillPointer += 1;
+	//~ }
+	
+	//~ void put(double[] rr) {
+		//~ assert(mat.rows > fillPointer, "In call to put: FillByRow struct is already full. The matrix was initialized with only " ~ m.rows ~ " rows.");
+		//~ assert(rr.m.cols == mat.cols, "In call to put: FillByRow struct has " ~ m.cols ~ " columns, but you're trying to add a Row with " ~ rr.m.cols ~ " columns.");
+		//~ Row(mat, fillPointer) = rr;
+		//~ fillPointer += 1;
+	//~ }
+	
+	//~ void put(DoubleMatrix rr) {
+		//~ assert(mat.rows > fillPointer, "In call to put: FillByRow struct is already full. The matrix was initialized with only " ~ m.rows ~ " rows.");
+		//~ assert(rr.m.cols == mat.cols, "In call to put: FillByRow struct has " ~ m.cols ~ " columns, but you're trying to add a Row with " ~ rr.m.cols ~ " columns.");
+		//~ Row(mat, fillPointer) = rr;
+		//~ fillPointer += 1;
+	//~ }
+}
 				
 struct Rows {
 	DoubleMatrix m;
@@ -1149,25 +1212,25 @@ struct Rows {
 		rowNumbers = [r];
 	}
 	
-	this(DoubleMatrix _m, int rs) {
+	this(DoubleMatrix _m, int[] rs) {
 		m = _m;
 		rowNumbers = rs;
 	}
 	
 	// e is *not* included
 	this(DoubleMatrix _m, int s, int e) {
-		 m = _m;
-		 foreach(ii; s..e) {
-			 rowNumbers ~= ii;
-		 }
-	 }
+		m = _m;
+		foreach(ii; s..e) {
+		 rowNumbers ~= ii;
+		}
+	}
 
 	DoubleMatrix mat() {
-		auto result = DoubleMatrix(rowNumbers.length, m.cols);
-		foreach(ii; 0..rowNumbers.length) {
-			Row(result, ii) = Row(m, rowNumbers[ii]);
+		auto result = FillByRow(rowNumbers.length.to!int, m.cols);
+		foreach(ii; rowNumbers) {
+			result.put(Row(m, ii));
 		}
-		return result;
+		return result.mat;
 	}
 
 	void opOpAssign(string op)(int r) {
@@ -1197,7 +1260,7 @@ struct Rows {
 	
 	void opAssign(double[][] rs) {
 		assert(rowNumbers.length == rs.length, "Wrong number of elements in opAssign(double[][])");
-		foreach(ii; 0..rowNumbers.length) {
+		foreach(ii; 0..rowNumbers.length.to!int) {
 			Row(m, ii) = rs[ii];
 		}
 	}
@@ -1207,7 +1270,7 @@ struct Rows {
 	}
 	
 	Row front() {
-		return Row(m, rowNumbers[ii]);
+		return Row(m, rowNumbers[0]);
 	}
 	
 	void popFront() {
@@ -1349,8 +1412,5 @@ struct Rows {
   //~ }
 //~ }
 
-struct Row {}
-//~ alias Rows = Row[];
-
-struct Col {}
+//struct Col {}
 //~ alias Cols = Col[];

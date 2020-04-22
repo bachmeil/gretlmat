@@ -1,3 +1,15 @@
+# Overview
+
+gretlmat is a D wrapper over the matrix functionality in [Gretl](http://gretl.sourceforge.net/). Gretl is written in C and provides a simple interface to BLAS and LAPACK.
+
+The goal of this project is to make it **as easy as possible to add matrix support to an existing D program**. It should be easy to use the gretlmat library, but it should also be easy to modify it for your needs. You only need to add one .d source file to your project and link to libgretl. 
+
+gretlmat targets **beginners to the D programming language**. When performance and ease of use are in conflict, I always go for ease of use. Note that the underlying matrix calculations are handled by the underlying BLAS and LAPACK libraries called by Gretl, which is where your program will spend most of its time.
+
+# OS support
+
+At this time, gretlmat only supports Linux, which means it's limited to Linux and WSL for Windows users.  It shouldn't take much to get it working natively on Windows or on Mac. The only issue is that I don't have time to support OSes I don't use. Finishing the library is a better use of my time.
+
 # Installation (Ubuntu)
 
 The only dependency is libgretl. On Ubuntu, this is satisfied by installing the package `libgretl1-dev`.
@@ -14,6 +26,8 @@ Assuming you're compiling a file named foo.d and you've copied src.d into the pr
 ```
 dmd foo.d src.d -L-lgretl-1.0
 ```
+
+You should be able to get this working with a Dub project with little effort.
 
 # Compiling in Release Mode
 
@@ -254,3 +268,39 @@ You can assign the part of a matrix below the diagonal to the same elements in a
 ### .elements
 
 Return an array of Element structs holding the values and indexes of each element below the diagonal.
+
+# FillByRow
+
+This is a utility function for constructing a matrix out of individual Row structs. You allocate a FillByRow struct as you would a DoubleMatrix:
+
+```
+auto x = FillByRow(10, 6);
+```
+
+`x` is a (10x6) DoubleMatrix that can filled row by row. If `v` is a Row, you add it to the next unfilled row by calling `put`:
+
+```
+x.put(v);
+```
+
+Two asserts are checked:
+
+- That there is another empty row that you can fill.
+- That the you're trying to add a Row with the right number of columns.
+
+In the future, you will be able to call `put` with the following argument types:
+
+- Rows
+- Col
+- Cols
+- double
+- double[]
+- DoubleMatrix
+
+FillByRow aliases to a DoubleMatrix, but if you want to explicitly return the underlying matrix, you can call .mat directly:
+
+```
+x.mat
+```
+
+.mat is a field, not a method, so don't use parenthesis.

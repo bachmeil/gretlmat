@@ -3,14 +3,11 @@ calling the project finished and doing a 1.0 release. Most of this
 functionality already exists in my other projects, so it's just a matter
 of pulling it in, testing, and making necessary adjustments.
 
+# For initial release
+
 - `Row` and `Col`. This would allow access to individual rows and columns
     without copying.
-- `Rows` and `Columns`. This would allow access to multiple rows and
-    columns without copying.
 - `ByRow` and `ByColumn`. Iterate over a matrix by row or by column.
-- `ByElement`. Iterate over a matrix without nested loops. This is one
-    that I haven't actually done before, and I'm still working out the
-    details. This will require another overload of the opIndex functions.
 - `_all` as a way to index an entire row or column, like
 
     ```
@@ -19,6 +16,9 @@ of pulling it in, testing, and making necessary adjustments.
     ```
     
     This would differ from the `Row` and `Col` types by returning a `DoubleMatrix`.
+
+# For 1.0 release
+
 - `Submatrix` type. It's important to be able to do things like
     
     ```
@@ -26,6 +26,11 @@ of pulling it in, testing, and making necessary adjustments.
     ```
     
     A `Submatrix` holds a reference to the data.
+- `Rows` and `Columns`. This would allow access to multiple rows and
+    columns without copying.
+- `ByElement`. Iterate over a matrix without nested loops. This is one
+    that I haven't actually done before, and I'm still working out the
+    details. This will require another overload of the opIndex functions.
 - Generalized `Submatrix` types. We can take the `Submatrix` concept a
     step further. Suppose you want to set the diagonal of matrix `m1`
     equal to the diagonal of matrix `m2`. You could set up a `foreach`
@@ -73,7 +78,10 @@ of pulling it in, testing, and making necessary adjustments.
     actually deal with it until it's used in an operation.
     
 - `NamedMatrix` and `NamedVector`. This would allow indexing by name rather
-    than number, which is less error-prone.
+    than number, which is less error-prone, but slower. Maybe using enums
+    would be better. Would have to be able to accommodate changes in the
+    names in a dataset at compiletime. Note sure how to use enums for that.
+    `x.element!(1, "gdp")`, `x.slice!(0..8, "gdp")`, or `x.submatrix!(0..4, ["gdp", "r", "inf"])`.
 - Ability to add and remove columns from a matrix. This is quite simple - the data is
     stored by column, so it's nothing more than adding elements to the end
     of the data array, or taking a slice if you want to drop the initial
