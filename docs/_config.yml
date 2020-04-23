@@ -1,0 +1,5 @@
+remote_theme: bachmeil/Type-on-Strap
+header_text: gretlmat-Simple matrix operations in D
+header_feature_image: " "
+footer_text: Lance Bachmeier
+katex: true
