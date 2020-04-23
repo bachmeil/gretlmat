@@ -1,5 +1,4 @@
 remote_theme: bachmeil/tale
-header_text: gretlmat-Simple matrix operations in D
-header_feature_image: " "
 footer_text: Lance Bachmeier
 katex: true
+title: gretlmat-Simple matrix operations in D
