@@ -1,7 +1,3 @@
----
-layout: page
----
-
 # Overview
 
 gretlmat is a D wrapper over the matrix functionality in [Gretl](http://gretl.sourceforge.net/). Gretl is written in C and provides a simple interface to BLAS and LAPACK.
