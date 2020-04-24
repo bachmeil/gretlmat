@@ -1,8 +1,7 @@
 ---
 layout: page
+title: DoubleMatrix
 ---
-
-# DoubleMatrix
 
 The DoubleMatrix struct is the primary data structure of gretlmat.
 
